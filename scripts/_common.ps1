@@ -12,6 +12,11 @@ function Get-CodexHome {
     return (Join-Path $env:USERPROFILE '.codex')
 }
 
+function Get-ClaudeHome {
+    if ($env:CLAUDE_CONFIG_DIR) { return $env:CLAUDE_CONFIG_DIR }
+    return (Join-Path $env:USERPROFILE '.claude')
+}
+
 function Get-CodexExe {
     if ($env:CODEX_EXE) { return $env:CODEX_EXE }
 

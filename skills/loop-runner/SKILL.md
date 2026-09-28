@@ -16,6 +16,10 @@ Two modes. Pick by whether the loop must survive outside this thread.
 
 OS root: `E:\Workspace\codex-os`.
 
+The in-thread protocol works in both Codex and Claude Code. Headless mode always launches
+`codex exec`; Claude Code can invoke that runner when Codex execution is intended. Do not
+describe the headless runner as a Claude backend or start a second CLI for ordinary in-thread work.
+
 ## In-thread protocol
 
 Before pass 1, state three things in one short block and get them right — a loop with a vague exit

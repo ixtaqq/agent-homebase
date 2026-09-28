@@ -30,11 +30,13 @@ function Test-RequiredFile {
 
 $requiredFiles = @(
     'AGENTS.md', 'README.md', 'SPEC.md', 'ROADMAP.md', 'TASKS.md',
-    '.codex-plugin\plugin.json', 'global\AGENTS.md', 'vendor\enabled.txt',
+    '.codex-plugin\plugin.json', 'global\AGENTS.md', 'global\CLAUDE.md', 'CLAUDE.md', 'vendor\enabled.txt',
     'scripts\doctor.ps1', 'scripts\loop.ps1', 'scripts\sync.ps1',
     'scripts\validate.ps1', 'scripts\schemas\loop-status.schema.json',
     'codex-home\agents\explorer.toml', 'codex-home\agents\reviewer.toml',
-    'codex-home\agents\docs-researcher.toml'
+    'codex-home\agents\docs-researcher.toml', 'templates\project\CLAUDE.md',
+    'claude-home\agents\os-explorer.md', 'claude-home\agents\os-reviewer.md',
+    'claude-home\agents\os-docs-researcher.md'
 )
 foreach ($file in $requiredFiles) { Test-RequiredFile $file }
 

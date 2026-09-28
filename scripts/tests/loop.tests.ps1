@@ -48,11 +48,9 @@ Implement the current story only.
 }
 
 Describe 'sync.ps1 safety contract' {
-    It 'requires Force before overwriting a changed global AGENTS.md copy' {
-        $sync = Get-Content -LiteralPath (Join-Path $root 'scripts\sync.ps1') -Raw -Encoding UTF8
-
-        $sync.Contains('if (-not $Force) {') | Should Be $true
-        $sync | Should Match "Add-Result 'AGENTS\.md' 'DRIFT'"
+    It 'preserves user files and shares skills across isolated Codex and Claude homes' {
+        & node (Join-Path $root 'scripts\tests\sync.test.js')
+        $LASTEXITCODE | Should Be 0
     }
 }
 

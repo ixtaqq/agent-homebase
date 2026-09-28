@@ -33,8 +33,9 @@ andrej-karpathy-skills/skills/karpathy-guidelines
 
 # --- davidondrej/skills : selected no-cost planning and documentation ---
 davidondrej-skills/skills/thinking-and-docs/ask-then-build
-davidondrej-skills/skills/thinking-and-docs/brain-to-docs
-davidondrej-skills/skills/thinking-and-docs/next-decision
+# Removed upstream; pinned copies now live in skills/ (see each skill's SOURCE.md).
+# davidondrej-skills/skills/thinking-and-docs/brain-to-docs
+# davidondrej-skills/skills/thinking-and-docs/next-decision
 
 # --- addyosmani/agent-skills : selected engineering workflows ---
 addyosmani-agent-skills/skills/code-simplification

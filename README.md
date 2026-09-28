@@ -1,27 +1,33 @@
 # codex-os
 
-A personal operating system for Codex, as a folder. Skills, loops, standards, templates, and memory
-live here; `~/.codex` points back at them, so every project on this machine gets them.
+A personal operating system for Codex and Claude Code, as a folder. Skills, standards, templates,
+and memory live here; both tools point back at them so projects share one maintained setup.
 
 ## How it is wired
 
-`scripts/sync.ps1` creates a Windows **directory junction** at `~/.codex/skills/<name>` for each
-folder in `skills/`. Junctions are live: edit a `SKILL.md` here and the next Codex thread sees it,
-with no reinstall. The one exception is `global/AGENTS.md`, which is *copied* to `~/.codex/AGENTS.md`
-because a single file cannot be junctioned — re-run sync after editing it.
+`scripts/sync.ps1 -Target all` creates Windows **directory junctions** at
+`~/.codex/skills/<name>` and `~/.claude/skills/<name>` for local and enabled vendor skills.
+Edit a source `SKILL.md` here and new sessions in both tools see it, with no reinstall.
+Codex's global `AGENTS.md` is copied. Claude's global `CLAUDE.md` is a small adapter that imports
+the shared `global/AGENTS.md`. Agent roles and Claude commands are copied; re-run sync after editing them.
+
+Use `-Target codex`, `-Target claude`, or `-Target all` for sync and doctor. The default is
+`codex` for compatibility with existing loops. `CODEX_HOME` and `CLAUDE_CONFIG_DIR` override
+the corresponding configuration directories. Sync never changes credentials, model settings,
+workspace trust, hooks, or plugin registrations.
 
 ## The three commands
 
 Wire everything up (idempotent, safe to re-run):
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1 -Target all
 ```
 
 Check the wiring:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\doctor.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\doctor.ps1 -Target all
 ```
 
 Validate the repository itself:
@@ -43,17 +49,44 @@ later passes, so concurrent Codex work cannot be picked up by accident.
 Optional story-ledger mode uses one fresh context per story and requires an independent verification
 command before persisting completion. See `loops/_schema.md` and `templates/story-ledger.json`.
 
+## Using Claude Code
+
+Claude Code discovers the same skill sources through `~/.claude/skills`. Use `/memory-keeper`,
+`/retrieve-knowledge`, `/project-bootstrap`, or `/ship-check`, or describe the task naturally.
+The shared prompt commands are `/os-review`, `/os-debug`, and `/os-ship-it`. Three read-only roles
+are installed as `os-explorer`, `os-reviewer`, and `os-docs-researcher`.
+
+Start a new Claude Code session after syncing. If `claude auth status` reports `loggedIn: false`,
+run `claude auth login` yourself. A structural doctor check does not verify authentication or a
+live model response. In Claude, `/memory` shows loaded instruction files; type `/` to browse commands.
+
+Use `AGENTS.md` for shared project conventions and import it from a project `CLAUDE.md` with
+`@AGENTS.md`; the bootstrap skill and template support this. Both tools use this repository's
+`memory/` and `knowledge/`. Keep that as the canonical store for facts intended to be shared.
+
+The in-session loop workflow works in either tool. The separate PowerShell headless loop runner
+continues to launch **Codex CLI**, including when invoked from Claude; no Claude execution backend
+or scheduled job is installed. Vendor workflows that mention a provider-specific tool still need
+that tool or an equivalent supported by the current agent.
+
+This setup selects six ECC skills rather than installing ECC's entire runtime. Adding a full ECC
+plugin later requires resolving overlapping skills and choosing a canonical memory workflow.
+References: [Claude skills](https://code.claude.com/docs/en/skills),
+[shared instructions](https://code.claude.com/docs/en/memory#share-one-file-with-other-coding-tools).
+
 ## Layout
 
 | Path | What it is |
 | --- | --- |
 | `global/AGENTS.md` | Personal defaults loaded into every session, everywhere |
+| `global/CLAUDE.md` | Claude adapter importing the shared personal defaults |
 | `skills/` | Reusable workflows Codex triggers on its own — one folder each, junctioned into `~/.codex/skills` |
 | `commands/` | Prompt bodies you invoke by hand (`review`, `debug`, `ship-it`) |
 | `loops/` | Loop definitions (`*.loop.md`) for headless, repeating work |
 | `scripts/` | `sync`, `doctor`, `loop`, `story-ledger`, `schedule-loop`, plus the loop status schema |
 | `SPEC.md`, `ROADMAP.md`, `TASKS.md` | Requirements, phase boundaries, and validated work |
 | `codex-home/agents/` | Read-only Codex role layers copied into `~/.codex/agents/` |
+| `claude-home/agents/` | Read-only Claude roles copied into `~/.claude/agents/` |
 | `templates/` | Starters: project `AGENTS.md`, project `.codex/config.toml`, new skill |
 | `vendor/` | Third-party skill repos, cloned as-is. `enabled.txt` picks which ones go live |
 | `memory/` | Durable decisions — one fact per file, `INDEX.md` on top |
@@ -68,21 +101,28 @@ command before persisting completion. See `loops/_schema.md` and `templates/stor
 | `project-bootstrap` | A repo needs an `AGENTS.md` and Codex settings |
 | `memory-keeper` | Something is worth remembering across sessions |
 | `ship-check` | Before calling a change done, committing, or deploying |
+| `retrieve-knowledge` | Retrieve or organize substantial shared notes |
+| `brain-to-docs` | Turn project vision and decisions into documentation |
+| `next-decision` | Work through unresolved decisions one at a time |
 
 ## Vendored skills
 
 `vendor/` holds upstream skill repos; `vendor/enabled.txt` decides which are junctioned into
-`~/.codex/skills`. **49 vendored skills are live** — mattpocock's `engineering/` + `productivity/`,
+both tools' personal skill folders. **47 vendor skills plus 7 local skills are available** — mattpocock's `engineering/` + `productivity/`,
 karpathy's guidelines, selected planning/documentation workflows from David Ondrej, selected
 engineering workflows from Addy Osmani, all of taste-skill, and six curated ECC skills for
 verification, loops, GitHub operations, security, repository scanning, and skill audits. ECC's
 unified-memory skill is vendored but off because `memory-keeper` remains the canonical memory system
 here. Hyperframes is vendored but off; every skill in it needs the Hyperframes CLI and Remotion.
 
+`brain-to-docs` and `next-decision` were removed from their upstream catalog. Their pinned,
+MIT-licensed copies live in `skills/`, with provenance in each `SOURCE.md`; the old vendor
+entries are commented out. Upstream pulls cannot silently remove these local copies.
+
 Enable or disable by editing `enabled.txt`, then:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1 -Force
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1 -Target all -Force
 ```
 
 `-Force` is required to unlink a disabled skill; without it sync reports it as `STALE` and leaves it.
@@ -125,3 +165,11 @@ if you drop the junctions first.
 
 Windows PowerShell 5.1 (no `pwsh` needed), Codex CLI installed. Junctions work across volumes
 without admin rights; only `schedule-loop.ps1` may require elevation.
+
+Claude support additionally needs Claude Code on `PATH`; it can be configured before sign-in.
+Node.js is needed only for the sync integration test, which uses isolated configuration folders
+and retains fixtures for inspection:
+
+```powershell
+node scripts/tests/sync.test.js
+```

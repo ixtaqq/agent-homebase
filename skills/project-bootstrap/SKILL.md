@@ -1,6 +1,6 @@
 ---
 name: project-bootstrap
-description: Set up a repo to work well with Codex — add an AGENTS.md with the project's real conventions, a .codex/config.toml, and mark the project trusted. Use when starting a new project, when the user says bootstrap, scaffold, set up this repo, onboard this codebase, or when a repo has no AGENTS.md and repeated instructions keep being re-explained each session.
+description: Set up a repository for Codex or Claude Code with verified project instructions and settings where needed. Use when the user asks to bootstrap, onboard, or set up a repository for coding agents.
 metadata:
   short-description: Wire a repo into the personal Codex OS
 ---
@@ -26,10 +26,14 @@ deliverable — a copied template with placeholders left in is worse than no fil
    Delete every section you could not fill with something specific. Aim for under 50 lines.
    If `AGENTS.md` already exists, extend it — never overwrite.
 
-3. **Add `<repo>/.codex/config.toml`** from the template only if the repo needs settings that differ
+3. **For Claude Code or a shared setup, add `<repo>/CLAUDE.md`** containing `@AGENTS.md`
+   from `templates/project/CLAUDE.md`. If it already exists, preserve its instructions and add
+   the import only if missing. This keeps the project conventions shared across both tools.
+
+4. **For Codex, add `<repo>/.codex/config.toml`** from the template only if the repo needs settings that differ
    from the global defaults (sandbox, model, reasoning effort, MCP servers). Skip it otherwise.
 
-4. **Mark the project trusted** so Codex does not re-prompt. Append to `~/.codex/config.toml`:
+5. **For Codex, mark the project trusted** only with the user's approval. Append to `~/.codex/config.toml`:
 
    ```toml
    [projects.'<lower-case absolute path>']
@@ -39,7 +43,10 @@ deliverable — a copied template with placeholders left in is worse than no fil
    The key must be the lower-cased absolute path. Show the user the exact block and confirm before
    writing — this file is theirs.
 
-5. **Report** which files were created, which commands you verified, and anything you could not
+   Claude Code manages workspace trust in its own interface; do not change Codex settings for
+   a Claude-only setup.
+
+6. **Report** which files were created, which commands you verified, and anything you could not
    determine and left out.
 
 ## Do not

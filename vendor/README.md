@@ -13,7 +13,7 @@ Vendored repos are not tracked by this repo's git (`.gitignore` keeps only `READ
 | --- | --- | --- | --- |
 | `mattpocock-skills/` | https://github.com/mattpocock/skills | 41 | `engineering/` + `productivity/` enabled; `deprecated/`, `in-progress/`, `personal/`, `misc/` left off |
 | `andrej-karpathy-skills/` | https://github.com/multica-ai/andrej-karpathy-skills | 1 | enabled |
-| `davidondrej-skills/` | https://github.com/davidondrej/skills | 3 | `ask-then-build`, `brain-to-docs`, and `next-decision` enabled; DeepAPI-backed research and automation skills left off |
+| `davidondrej-skills/` | https://github.com/davidondrej/skills | 1 | `ask-then-build` enabled; retired `brain-to-docs` and `next-decision` retained under local `skills/` with pinned provenance |
 | `addyosmani-agent-skills/` | https://github.com/addyosmani/agent-skills | 5 | selected source-driven, doubt-driven, simplification, frontend, and performance workflows enabled; browser testing left off until Chrome DevTools MCP is configured |
 | `taste-skill/` | https://github.com/leonxlnx/taste-skill | 13 | all enabled; design/UI taste and imagegen |
 | `hyperframes/` | https://github.com/heygen-com/hyperframes | 19 | **all disabled.** Sparse checkout of `skills/` only (30 MB of an 808 MB repo). Needs the hyperframes CLI + Remotion toolchain to be useful |

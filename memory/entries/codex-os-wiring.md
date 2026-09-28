@@ -1,6 +1,6 @@
 ---
 name: codex-os-wiring
-description: codex-os skills reach Codex through directory junctions, not copies or a plugin install
+description: why Codex and Claude share curated skill junctions and one durable memory store
 type: decision
 created: 2026-07-27
 ---
@@ -18,4 +18,14 @@ Junctions work across volumes (E: to C:) without admin rights, unlike symlinks a
 The plugin manifest exists in the repo but is deliberately **not registered** in any marketplace.
 Registering it while the junctions exist would load every skill twice.
 
-**Applies to:** all Codex work on this machine. See [[loop-status-contract]].
+**Updated 2026-09-28:** The user asked for the best setup that also works in Claude Code.
+Keep codex-os as the common source, share its selected skills through both tools' personal
+skill directories, and use the existing `memory/` and `knowledge/` for context intended to cross tools.
+Claude imports the shared defaults through a small `CLAUDE.md` adapter. Its read-only roles and
+prefixed prompt commands are copied by the same sync script with `-Target all`.
+
+**Why this choice:** retain the user's existing personal conventions and selected ECC workflows
+without introducing a second competing memory store or a duplicate full ECC installation.
+Headless loops remain Codex-backed; ordinary in-session workflows use the current tool.
+
+**Applies to:** Codex and Claude Code on this machine. See [[loop-status-contract]].

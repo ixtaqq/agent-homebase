@@ -1,12 +1,14 @@
 # Conventions for editing codex-os
 
-This repo is the source of truth for the personal Codex setup. `~/.codex/skills/<name>` are
-junctions pointing back here, so edits are live in new threads immediately.
+This repo is the source of truth for the shared Codex and Claude Code setup.
+`~/.codex/skills/<name>` and `~/.claude/skills/<name>` are junctions pointing back here.
 
 ## Rules
 
 - Never edit anything under `~/.codex/skills/` directly — edit here instead.
 - Never touch `~/.codex/skills/.system/` (vendor-owned, overwritten on update).
+- Never edit `~/.claude/skills/` directly either. Use `sync.ps1 -Target all` and
+  `doctor.ps1 -Target all` when a change affects both tools. Default target remains Codex.
 - Every skill folder needs `SKILL.md` with YAML frontmatter containing `name` and `description`.
   `name` must equal the folder name. `description` is the trigger — write it as *when to use this*,
   since it is the only body text Codex reads before deciding.
@@ -31,3 +33,7 @@ junctions pointing back here, so edits are live in new threads immediately.
 | `vendor/enabled.txt` | `powershell -NoProfile -File scripts/sync.ps1 -Force` (`-Force` to unlink disabled ones) |
 | `global/AGENTS.md` | `powershell -NoProfile -File scripts/sync.ps1` (it is copied, not linked) |
 | anything structural | `powershell -NoProfile -File scripts/doctor.ps1` |
+
+For shared sync changes, run `node scripts/tests/sync.test.js` and
+`powershell -NoProfile -File scripts/validate.ps1`. The integration test uses isolated homes,
+checks dry runs, idempotence, drift, and conflict preservation, and retains its fixtures.
