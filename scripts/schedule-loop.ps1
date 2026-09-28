@@ -30,13 +30,15 @@ param(
     # Run once a day at HH:mm.
     [Parameter(ParameterSetName = 'Daily', Mandatory)][string]$Daily,
     # Repeat every N minutes, indefinitely, starting now.
-    [Parameter(ParameterSetName = 'Interval', Mandatory)][int]$EveryMinutes,
+    [Parameter(ParameterSetName = 'Interval', Mandatory)][ValidateRange(1, 2147483647)][int]$EveryMinutes,
     # Run at user logon.
     [Parameter(ParameterSetName = 'Logon', Mandatory)][switch]$AtLogon,
     # Unregister the task for this loop.
     [Parameter(ParameterSetName = 'Remove', Mandatory)][switch]$Remove,
     # Show registered agent-homebase tasks.
-    [Parameter(ParameterSetName = 'List')][switch]$List
+    [Parameter(ParameterSetName = 'List')][switch]$List,
+    [switch]$DryRun,
+    [switch]$Force
 )
 
 . "$PSScriptRoot\_common.ps1"
@@ -62,9 +64,11 @@ if ($PSCmdlet.ParameterSetName -eq 'List') {
 }
 
 $loopName = $Loop -replace '\.loop\.md$', ''
+if ($loopName -notmatch '^[A-Za-z0-9_-]+$') { throw 'Loop must be a name containing letters, numbers, underscores or hyphens.' }
 $taskName = "AgentHomebase-$loopName"
 
 if ($Remove) {
+    if ($DryRun) { Write-Host "Would remove scheduled task $taskFolder$taskName."; exit 0 }
     Unregister-ScheduledTask -TaskName $taskName -TaskPath $taskFolder -Confirm:$false
     Write-Host "Removed scheduled task $taskName." -ForegroundColor Green
     exit 0
@@ -77,6 +81,19 @@ if (-not (Test-Path -LiteralPath $loopFile)) {
 }
 
 $runner = Join-Path $root 'scripts\loop.ps1'
+if ($Daily) { [void][datetime]::Parse($Daily) }
+if ($DryRun) {
+    $schedule = 'at logon'
+    if ($Daily) { $schedule = "daily at $Daily" }
+    if ($EveryMinutes) { $schedule = "every $EveryMinutes min" }
+    Write-Host "Would schedule $taskFolder$taskName ($schedule)."
+    Write-Host "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$runner`" -Loop $loopName"
+    Write-Host "Replace existing task: $Force"
+    exit 0
+}
+if (-not $Force -and (Get-ScheduledTask -TaskName $taskName -TaskPath $taskFolder -ErrorAction SilentlyContinue)) {
+    throw "Task $taskFolder$taskName already exists. Use -Force to replace it."
+}
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' `
     -Argument ('-NoProfile -ExecutionPolicy Bypass -File "{0}" -Loop {1}' -f $runner, $loopName) `
     -WorkingDirectory $root
@@ -101,7 +118,7 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnB
     -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
 
 Register-ScheduledTask -TaskName $taskName -TaskPath $taskFolder -Action $action `
-    -Trigger $trigger -Settings $settings -Description "agent-homebase loop '$loopName' ($desc)" -Force | Out-Null
+    -Trigger $trigger -Settings $settings -Description "agent-homebase loop '$loopName' ($desc)" -Force:$Force | Out-Null
 
 Write-Host "Scheduled '$loopName' $desc as $taskFolder$taskName." -ForegroundColor Green
 Write-Host "Logs: $root\logs\$loopName\"

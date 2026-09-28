@@ -19,7 +19,7 @@ Describe 'story-ledger.ps1' {
     }
 
     AfterEach {
-        Remove-Item -LiteralPath $testDir -Recurse -Force
+        Write-Host "Fixtures retained: $testDir"
     }
 
     It 'selects the lowest-numbered pending priority' {

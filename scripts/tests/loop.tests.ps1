@@ -8,7 +8,7 @@ Describe 'loop.ps1 dry run' {
 
         $text = $output -join "`n"
         $text | Should Match '--json'
-        $text | Should Match 'exec resume <session-id from pass 1>'
+        $text | Should Match 'exec .* resume <session-id from pass 1>'
         $text | Should Not Match 'resume --last'
     }
 
@@ -40,10 +40,8 @@ Implement the current story only.
 
             $text | Should Match 'story=S1'
             $text | Should Match 'verification_command: exit 0'
-            $text | Should Not Match 'exec resume'
-        } finally {
-            Remove-Item -LiteralPath $testDir -Recurse -Force
-        }
+            $text | Should Not Match '\bresume\b'
+        } finally { Write-Host "Fixtures retained: $testDir" }
     }
 }
 

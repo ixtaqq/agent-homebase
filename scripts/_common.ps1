@@ -72,6 +72,11 @@ function Get-FileHashOrNull {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
 }
 
+function Get-BackupPath {
+    param([Parameter(Mandatory)][string]$Path)
+    return ($Path + '.' + [guid]::NewGuid().ToString('N') + '.bak')
+}
+
 # Parses a markdown file with `---` YAML-ish frontmatter into @{ Meta = @{}; Body = '' }.
 # Supports flat `key: value` pairs only, with optional quotes and # comments.
 function Read-FrontMatterFile {

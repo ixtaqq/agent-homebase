@@ -40,6 +40,11 @@ function snapshot(dir) {
   }
   return result;
 }
+function backups(file) {
+  return fs.readdirSync(path.dirname(file))
+    .filter(name => name.startsWith(path.basename(file) + '.') && name.endsWith('.bak'))
+    .map(name => path.join(path.dirname(file), name));
+}
 function assertSharedSkills() {
   const first = fs.readdirSync(path.join(codex, 'skills')).sort();
   const second = fs.readdirSync(path.join(claude, 'skills')).sort();
@@ -89,7 +94,7 @@ try {
     run('sync.ps1', ['-Target', 'claude', '-Force', '-DryRun']);
     assert.deepEqual(snapshot(fixture), before);
     run('sync.ps1', ['-Target', 'claude', '-Force']);
-    assert.deepEqual(fs.readFileSync(file + '.bak'), original);
+    assert.deepEqual(fs.readFileSync(backups(file)[0]), original);
   });
   check('modified Claude command and agent role are preserved without Force', () => {
     const files = ['commands/os-debug.md', 'agents/os-reviewer.md'].map(p => path.join(claude, p));
@@ -107,6 +112,18 @@ try {
     run('sync.ps1', ['-Target', 'claude', '-Force'], 1);
     assert.equal(fs.lstatSync(skillDir).isSymbolicLink(), false);
     assert.equal(fs.readFileSync(path.join(skillDir, 'personal.txt'), 'utf8'), 'Keep this data');
+  });
+  check('repeated forced syncs preserve every guidance and role backup', () => {
+    env.CLAUDE_CONFIG_DIR = claude;
+    const files = ['CLAUDE.md', 'agents/os-reviewer.md'].map(p => path.join(claude, p));
+    for (let pass = 0; pass < 2; pass++) {
+      const old = files.flatMap(file => backups(file)).map(file => [file, fs.readFileSync(file)]);
+      for (const file of files) fs.appendFileSync(file, `\nRevision ${pass}\n`);
+      const originals = files.map(file => fs.readFileSync(file));
+      run('sync.ps1', ['-Target', 'claude', '-Force']);
+      old.forEach(([file, content]) => assert.deepEqual(fs.readFileSync(file), content));
+      files.forEach((file, i) => assert.ok(backups(file).some(backup => fs.readFileSync(backup).equals(originals[i]))));
+    }
   });
   console.log(`${passed} passed / 0 failed. Fixtures: ${fixture}`);
 } catch (error) {

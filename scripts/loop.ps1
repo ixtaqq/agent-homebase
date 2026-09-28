@@ -143,12 +143,13 @@ for ($i = 1; $i -le $maxIter; $i++) {
 
     $cmdArgs = New-Object System.Collections.ArrayList
     [void]$cmdArgs.Add('exec')
+    [void]$cmdArgs.AddRange(@('-C', $cwd, '-s', $sandbox))
+    if ($profileName) { [void]$cmdArgs.AddRange(@('-p', $profileName)) }
     if ($i -gt 1 -and -not $freshContext) { [void]$cmdArgs.AddRange(@('resume', $threadId)) }
-    [void]$cmdArgs.AddRange(@('-C', $cwd, '-s', $sandbox, '--skip-git-repo-check'))
+    [void]$cmdArgs.Add('--skip-git-repo-check')
     [void]$cmdArgs.AddRange(@('--output-schema', $schema, '-o', $iterFile))
     if ($i -eq 1 -or $freshContext) { [void]$cmdArgs.Add('--json') }
     if ($model)   { [void]$cmdArgs.AddRange(@('-m', $model)) }
-    if ($profileName) { [void]$cmdArgs.AddRange(@('-p', $profileName)) }
 
     if ($storyLedger) {
         $storyContract = @"
@@ -192,7 +193,11 @@ Deterministic verification gate owned by the runner:
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prevEap
 
-    if ($code -ne 0) { Write-Log "pass $i -- codex exited $code" }
+    if ($code -ne 0) {
+        Write-Log "pass $i -- codex exited $code; treating as blocked."
+        $finalStatus = 'blocked'
+        break
+    }
 
     if ($i -eq 1 -and -not $freshContext) {
         foreach ($line in (Get-Content -LiteralPath $outFile -Encoding UTF8 -ErrorAction SilentlyContinue)) {

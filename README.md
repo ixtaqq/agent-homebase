@@ -16,7 +16,19 @@ Use `-Target codex`, `-Target claude`, or `-Target all` for sync and doctor. The
 the corresponding configuration directories. Sync never changes credentials, model settings,
 workspace trust, hooks, or plugin registrations.
 
-## The three commands
+## Setup and checks
+
+Restore missing vendor repositories at the revisions in `vendor-lock.json` before syncing a fresh
+checkout:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-vendor.ps1 -DryRun
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-vendor.ps1
+```
+
+Existing vendor folders are never changed. `-Check` verifies their origin, revision, and clean
+working tree; drift must be reviewed explicitly. The lock records the installed revisions, not an
+upstream security audit. `-Destination` supports restoring into a separate directory for review.
 
 Wire everything up (idempotent, safe to re-run):
 
@@ -127,8 +139,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\
 
 `-Force` is required to unlink a disabled skill; without it sync reports it as `STALE` and leaves it.
 It is also required before sync overwrites a changed `~/.codex/AGENTS.md`; sync saves its previous
-contents as `~/.codex/AGENTS.md.bak`. Unlinking removes the junction only — the vendored files are never touched. Details and update
+contents as `~/.codex/AGENTS.md.<unique-id>.bak`. Roles and commands use unique backups too, so
+repeated forced syncs preserve earlier versions. Unlinking removes the junction only — the vendored files are never touched. Details and update
 commands: [vendor/README.md](vendor/README.md).
+
+Those upstream clone/pull commands are unpinned. Use `bootstrap-vendor.ps1` for reproducible installs;
+after deliberately reviewing an upstream update, record its new commit in `vendor-lock.json`.
 
 Never edit anything under `vendor/`. To customize an upstream skill, copy it into `skills/`.
 
@@ -152,6 +168,7 @@ powershell -NoProfile -File E:\Workspace\agent-homebase\scripts\schedule-loop.ps
 ```
 
 Tasks land under `\AgentHomebase\` in Task Scheduler. `-List` shows them, `-Remove` unregisters one.
+Use `-DryRun` to preview registration or removal. Replacing an existing task requires `-Force`.
 Registering may need an elevated shell.
 
 ## The plugin manifest
@@ -163,13 +180,20 @@ if you drop the junctions first.
 
 ## Requirements
 
-Windows PowerShell 5.1 (no `pwsh` needed), Codex CLI installed. Junctions work across volumes
+Windows PowerShell 5.1 (no `pwsh` needed), Git, Codex CLI installed. Junctions work across volumes
 without admin rights; only `schedule-loop.ps1` may require elevation.
 
 Claude support additionally needs Claude Code on `PATH`; it can be configured before sign-in.
-Node.js is needed only for the sync integration test, which uses isolated configuration folders
-and retains fixtures for inspection:
+Node.js is needed for the integration tests, which use isolated folders and retain fixtures
+for inspection:
 
 ```powershell
 node scripts/tests/sync.test.js
+node scripts/tests/reliability.test.js
 ```
+
+The reliability checks use a mock model process, validate the generated commands against the
+installed CLI's help parser, preview scheduling, and restore a vendor fixture from a local source.
+They make no model calls or scheduled-task changes. Pester fixtures are also retained for inspection.
+Validation checks tracked and non-ignored files for runtime artifacts, PowerShell ASCII encoding
+and syntax, and pinned vendor drift.

@@ -222,7 +222,7 @@ if (Test-Path -LiteralPath $agentsSrcRoot -PathType Container) {
         } elseif ($DryRun) {
             Add-Result $agent.Name 'would overwrite' 'agent role differs'
         } else {
-            Copy-Item -LiteralPath $dest -Destination "$dest.bak" -Force
+            Copy-Item -LiteralPath $dest -Destination (Get-BackupPath $dest)
             Copy-Item -LiteralPath $agent.FullName -Destination $dest -Force
             Add-Result $agent.Name 'updated' 'previous role saved as .bak'
         }
@@ -245,7 +245,7 @@ if ($Target -eq 'claude') {
             Add-Result $itemName 'would copy' 'command (changed files are backed up with -Force)'
         } else {
             New-Item -ItemType Directory -Path $commandsDest -Force | Out-Null
-            if ($destHash) { Copy-Item -LiteralPath $dest -Destination ($dest + '.' + [guid]::NewGuid().ToString('N') + '.bak') }
+            if ($destHash) { Copy-Item -LiteralPath $dest -Destination (Get-BackupPath $dest) }
             Copy-Item -LiteralPath $command.FullName -Destination $dest -Force
             Add-Result $itemName 'copied' 'command'
         }
@@ -259,7 +259,7 @@ foreach ($dest in (Get-ChildItem -Path $skillsDest -Directory -Force -ErrorActio
     if (-not (Test-IsLink $dest.FullName)) { continue }
     $linkTarget = Get-LinkTarget $dest.FullName
     if (-not $linkTarget) { continue }
-    if (-not $linkTarget.ToLower().StartsWith($vendorRoot.ToLower())) { continue }
+    if (-not $linkTarget.ToLower().StartsWith($vendorRoot.TrimEnd('\').ToLower() + '\')) { continue }
 
     if ($Force) {
         if ($DryRun) {
@@ -293,13 +293,13 @@ if (Test-Path $agentsSrc) {
         Add-Result $guidanceName 'ok' 'in sync'
     } else {
         # Destination differs. It may hold edits made directly in ~/.codex that are not in the repo.
-        $backup = "$agentsDest.bak"
+        $backup = Get-BackupPath $agentsDest
         if (-not $Force) {
             Add-Result $guidanceName 'DRIFT' 'differs from repo -- re-run with -Force to back up and overwrite'
         } elseif ($DryRun) {
             Add-Result $guidanceName 'would overwrite' "differs from repo (backup -> $backup)"
         } else {
-            Copy-Item -LiteralPath $agentsDest -Destination $backup -Force
+            Copy-Item -LiteralPath $agentsDest -Destination $backup
             Copy-Item -LiteralPath $agentsSrc -Destination $agentsDest -Force
             Add-Result $guidanceName 'updated' "previous version saved to $backup"
         }

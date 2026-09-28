@@ -94,12 +94,27 @@ foreach ($loop in (Get-ChildItem -LiteralPath $loopsRoot -Filter '*.loop.md' -Fi
     if (-not (Test-Path -LiteralPath $cwd -PathType Container)) { Add-ValidationError "loop cwd does not exist: $($loop.Name)" }
 }
 
-$forbiddenNames = @('auth.json', 'history.jsonl', 'installation_id', 'state_5.sqlite', 'goals_1.sqlite', 'memories_1.sqlite')
-foreach ($name in $forbiddenNames) {
-    $found = Get-ChildItem -LiteralPath $root -Recurse -Force -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -eq $name -and $_.FullName -notlike "$root\vendor\*" }
-    if ($found) { Add-ValidationError "runtime or credential file must not be tracked: $name" }
+$repoFiles = @(& git -C $root -c core.quotepath=false ls-files --cached --others --exclude-standard)
+if ($LASTEXITCODE -ne 0) { throw 'Could not enumerate repository files with git.' }
+foreach ($relativePath in ($repoFiles | Sort-Object -Unique)) {
+    $name = Split-Path $relativePath -Leaf
+    if ($name -match '^(auth\.json|history\.jsonl|installation_id|(?:state|goals|memories)_\d+\.sqlite(?:-wal|-shm)?)$') {
+        Add-ValidationError "runtime or credential file must not be tracked: $relativePath"
+    }
+    if ($relativePath -like 'vendor/*' -or $relativePath -notlike '*.ps1') { continue }
+    $scriptPath = Join-Path $root $relativePath
+    if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) { continue }
+    if (@([IO.File]::ReadAllBytes($scriptPath) | Where-Object { $_ -gt 127 }).Count -gt 0) {
+        Add-ValidationError "PowerShell script must be ASCII-only: $relativePath"
+    }
+    $tokens = $null
+    $parseErrors = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$parseErrors)
+    foreach ($parseError in $parseErrors) { Add-ValidationError "${relativePath}: $($parseError.Message)" }
 }
+
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts\bootstrap-vendor.ps1') -Check
+if ($LASTEXITCODE -ne 0) { Add-ValidationError 'vendor revisions differ from vendor-lock.json' }
 
 if ($errors.Count -gt 0) {
     Write-Warning ("Validation failed with {0} error(s)." -f $errors.Count)

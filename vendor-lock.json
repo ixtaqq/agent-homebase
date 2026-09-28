@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "repositories": [
+    {
+      "name": "addyosmani-agent-skills",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "commit": "2686b620fc1fed2e8f60c704839c766b8594c6b6"
+    },
+    {
+      "name": "andrej-karpathy-skills",
+      "url": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "commit": "2c606141936f1eeef17fa3043a72095b4765b9c2"
+    },
+    {
+      "name": "davidondrej-skills",
+      "url": "https://github.com/davidondrej/skills",
+      "commit": "1864aafa4c29fa70333a648470ec614c917bbd0b"
+    },
+    {
+      "name": "ecc",
+      "url": "https://github.com/affaan-m/ECC.git",
+      "commit": "d3b8a3e908904e242ed2dbe66af62cca71131419"
+    },
+    {
+      "name": "hyperframes",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "commit": "bee6a8e17d9198e734907b06e2c6f167529893e3",
+      "sparse": [
+        "skills"
+      ]
+    },
+    {
+      "name": "mattpocock-skills",
+      "url": "https://github.com/mattpocock/skills",
+      "commit": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    {
+      "name": "taste-skill",
+      "url": "https://github.com/leonxlnx/taste-skill",
+      "commit": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b"
+    }
+  ]
+}
