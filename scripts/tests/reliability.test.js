@@ -48,8 +48,13 @@ try {
     const find = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
       `. '${root.replace(/'/g, "''")}\\scripts\\_common.ps1'; $env:CODEX_EXE = ''; Get-CodexExe`], { env, encoding: 'utf8' });
     assert.equal(find.status, 0, find.stderr);
-    for (const args of recorded) {
-      const result = spawnSync(find.stdout.trim(), [...args.slice(0, -1), '--help'], { encoding: 'utf8' });
+    const helpScript = path.join(fixture, 'cli-help.ps1');
+    fs.writeFileSync(helpScript, 'param($Binary, $ArgumentsFile)\n$cliArguments = Get-Content -LiteralPath $ArgumentsFile -Raw | ConvertFrom-Json\n& $Binary @cliArguments\nexit $LASTEXITCODE\n');
+    for (const [index, args] of recorded.entries()) {
+      const argsFile = path.join(fixture, `help-${index}.json`);
+      fs.writeFileSync(argsFile, JSON.stringify([...args.slice(0, -1), '--help']));
+      const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        helpScript, find.stdout.trim(), argsFile], { env, encoding: 'utf8' });
       assert.equal(result.status, 0, result.stdout + result.stderr);
     }
   });

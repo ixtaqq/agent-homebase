@@ -120,7 +120,7 @@ References: [Claude skills](https://code.claude.com/docs/en/skills),
 ## Vendored skills
 
 `vendor/` holds upstream skill repos; `vendor/enabled.txt` decides which are junctioned into
-both tools' personal skill folders. **47 vendor skills plus 7 local skills are available** — mattpocock's `engineering/` + `productivity/`,
+both tools' personal skill folders. **48 vendor skills plus 7 local skills are available** — mattpocock's `engineering/` + `productivity/`,
 karpathy's guidelines, selected planning/documentation workflows from David Ondrej, selected
 engineering workflows from Addy Osmani, all of taste-skill, and six curated ECC skills for
 verification, loops, GitHub operations, security, repository scanning, and skill audits. ECC's
@@ -197,3 +197,39 @@ installed CLI's help parser, preview scheduling, and restore a vendor fixture fr
 They make no model calls or scheduled-task changes. Pester fixtures are also retained for inspection.
 Validation checks tracked and non-ignored files for runtime artifacts, PowerShell ASCII encoding
 and syntax, and pinned vendor drift.
+
+## Quality checks
+
+Install the pinned development dependencies and checksum-verified Windows tools:
+
+```powershell
+npm ci
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-check-tools.ps1
+```
+
+Tools stay under ignored `logs/tools/`; setup also supports `-DryRun`. Versions and archive
+SHA-256 hashes live in `tools-lock.json`. Nothing is installed into your global PowerShell modules.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/analyze.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scan-secrets.ps1
+npm test
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Pester -Script .\scripts\tests -EnableExit"
+npm run eval:smoke
+```
+
+PSScriptAnalyzer enforces a focused baseline: PowerShell 5.1 syntax, automatic-variable assignment,
+plaintext password handling, dynamic expression execution, and broken hash algorithms. Its rule
+selection is explicit in `PSScriptAnalyzerSettings.psd1`; this is not a claim that every upstream
+style rule passes. Gitleaks scans Git history and a snapshot of tracked/non-ignored source files,
+with detected values redacted. Source snapshots and test fixtures are retained under `logs/` or
+the OS temporary directory. The scanner does not traverse ignored vendor clones or dependencies.
+
+`.github/workflows/checks.yml` runs these checks on Windows for pushes and pull requests.
+It maps the existing `E:\Workspace\agent-homebase` convention to the checkout for the personal
+guidance and loop fixtures. This verifies the current Windows setup, not arbitrary-path portability.
+CI has read-only repository permissions and does not call a model, deploy, or modify your profiles.
+
+`writing-for-agents` is enabled for maintaining skill descriptions and shared instructions.
+Optional model-backed evaluations are documented in [evals/README.md](evals/README.md).

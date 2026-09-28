@@ -14,7 +14,10 @@
 - [x] Restore two retired vendor skills as pinned local copies with licenses and provenance.
 - [x] Verify both installed profiles and seven isolated sync integration checks.
 - [ ] Evaluate canonical `.agents/skills` compatibility on the installed Codex version.
-- [ ] Add CI after the local validation contract is stable.
+- [x] Enable writing-for-agents and verify both installed profiles.
+- [x] Add pinned PowerShell analysis and secret scanning with negative regression cases.
+- [ ] Confirm the new Windows CI workflow passes on GitHub (workflow prepared locally).
+- [ ] Run the prepared skill evaluations with an approved model-usage budget.
 
 ## Completion rule
 

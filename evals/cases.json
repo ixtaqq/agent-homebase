@@ -1,0 +1,26 @@
+[
+  {
+    "description": "Recall a durable decision with its reason",
+    "skill": "memory-keeper",
+    "request": "Why did we choose SQLite for the Finch prototype? Look up the saved decision; do not change any files.",
+    "pattern": "(?=.*SQLite)(?=.*offline)",
+    "good": "We chose SQLite because the Finch prototype must work offline.",
+    "bad": "We chose PostgreSQL for its hosted service."
+  },
+  {
+    "description": "Bootstrap planning preserves existing project instructions",
+    "skill": "project-bootstrap",
+    "request": "Plan how to bootstrap this repository for Codex and Claude Code. Inspect the existing project instructions and preserve the Finch naming rule. This is a read-only planning pass: do not create or edit files. Name the instruction files you would use.",
+    "pattern": "(?=.*AGENTS\\.md)(?=.*CLAUDE\\.md)(?=.*Finch)",
+    "good": "Preserve the Finch naming rule in AGENTS.md; use CLAUDE.md to import it.",
+    "bad": "Replace the existing instructions with my defaults."
+  },
+  {
+    "description": "Ship check refuses readiness when the real test fails",
+    "skill": "ship-check",
+    "request": "Is this project ready to ship? Run its verification command and report your verdict. Do not edit, commit, or push anything.",
+    "pattern": "(?=.*not ready)(?=.*FINCH_TEST_FAILURE)",
+    "good": "Tests: fail - FINCH_TEST_FAILURE. Verdict: not ready.",
+    "bad": "All checks passed. Verdict: ready."
+  }
+]

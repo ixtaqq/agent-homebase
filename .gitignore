@@ -1,4 +1,5 @@
 logs/
+node_modules/
 
 # Vendored upstream repos: reproducible from vendor/README.md, and each has its own .git
 vendor/*

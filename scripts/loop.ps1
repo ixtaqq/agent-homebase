@@ -202,9 +202,9 @@ Deterministic verification gate owned by the runner:
     if ($i -eq 1 -and -not $freshContext) {
         foreach ($line in (Get-Content -LiteralPath $outFile -Encoding UTF8 -ErrorAction SilentlyContinue)) {
             try {
-                $event = $line | ConvertFrom-Json
-                if ($event.type -eq 'thread.started' -and $event.thread_id) {
-                    $threadId = $event.thread_id
+                $sessionEvent = $line | ConvertFrom-Json
+                if ($sessionEvent.type -eq 'thread.started' -and $sessionEvent.thread_id) {
+                    $threadId = $sessionEvent.thread_id
                     break
                 }
             } catch {}

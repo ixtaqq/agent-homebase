@@ -1,0 +1,3 @@
+title = "Agent Homebase secret scanning"
+[extend]
+useDefault = true

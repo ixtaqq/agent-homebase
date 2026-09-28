@@ -1,0 +1,70 @@
+name: Windows checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    env:
+      PROMPTFOO_DISABLE_TELEMETRY: '1'
+      PROMPTFOO_DISABLE_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Reproduce the personal installation path
+        run: |
+          if (-not (Test-Path 'E:\')) {
+            $driveRoot = Join-Path $env:RUNNER_TEMP 'homebase-drive'
+            New-Item -ItemType Directory -Path $driveRoot -Force | Out-Null
+            subst E: $driveRoot
+            if ($LASTEXITCODE -ne 0) { throw 'Could not map fixture drive.' }
+          }
+          New-Item -ItemType Directory -Path 'E:\Workspace' -Force | Out-Null
+          if (Test-Path 'E:\Workspace\agent-homebase') { throw 'Fixture path already exists.' }
+          New-Item -ItemType Junction -Path 'E:\Workspace\agent-homebase' -Value $env:GITHUB_WORKSPACE | Out-Null
+      - name: Install pinned dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          (Join-Path $env:GITHUB_WORKSPACE 'node_modules\.bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & .\scripts\setup-check-tools.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\scripts\bootstrap-vendor.ps1
+          exit $LASTEXITCODE
+      - name: Validate structure and analyze PowerShell
+        run: |
+          & .\scripts\validate.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\scripts\analyze.ps1
+          exit $LASTEXITCODE
+      - name: Scan secrets in history and current source
+        run: |
+          & .\scripts\scan-secrets.ps1
+          exit $LASTEXITCODE
+      - name: Run regression tests
+        run: |
+          npm test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Import-Module Pester -RequiredVersion 3.4.0
+          Invoke-Pester -Script .\scripts\tests -EnableExit
+      - name: Test evaluation plumbing without model calls
+        run: |
+          npm run eval:prepare
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run eval:smoke
+          exit $LASTEXITCODE
