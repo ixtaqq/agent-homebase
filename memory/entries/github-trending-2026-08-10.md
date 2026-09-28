@@ -31,9 +31,9 @@ GitHub Trending snapshot, captured 2026-08-10. Treat star gains as an attention 
 
 ## Interpretation and caution
 
-The durable signal is **operationalization of agents**: packaged expertise (skills), persistent/shared context (memory and code graphs), tool access (PDF/Office/voice), and coordination (parallel-agent harnesses). This aligns with the local Codex OS setup: maintain a curated, explicit skill set and invoke specialist workflows deliberately.
+The durable signal is **operationalization of agents**: packaged expertise (skills), persistent/shared context (memory and code graphs), tool access (PDF/Office/voice), and coordination (parallel-agent harnesses). This aligns with the local Agent Homebase setup: maintain a curated, explicit skill set and invoke specialist workflows deliberately.
 
 Do not infer that every fast-growing skill pack is safe to install. In particular, security or reverse-engineering packs such as [reverse-skill](https://github.com/zhaoxuya520/reverse-skill) should be code-reviewed and installed only with a clear authorized-use case. Trending ranks attention; it does not audit provenance, licensing, or supply-chain risk.
 
 **Why:** Preserves a dated market scan and the decision-relevant takeaway: favor tools with clear operational value and review viral agent packages before enabling them.
-**Applies to:** Codex OS skill curation and project tooling choices.
+**Applies to:** Agent Homebase skill curation and project tooling choices.

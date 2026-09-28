@@ -20,5 +20,5 @@ the cause was clear. `scripts/doctor.ps1` was rewritten standalone to satisfy bo
 working reference; `sync.ps1` and `loop.ps1` still dot-source `_common.ps1` because they only ever
 run from a normal shell.
 
-**Applies to:** any codex-os script meant to be called from inside a loop or agent session.
-See [[codex-os-wiring]].
+**Applies to:** any agent-homebase script meant to be called from inside a loop or agent session.
+See [[agent-homebase-wiring]].

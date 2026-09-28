@@ -1,4 +1,4 @@
-# Shared helpers for codex-os scripts. Dot-source: . "$PSScriptRoot\_common.ps1"
+# Shared helpers for agent-homebase scripts. Dot-source: . "$PSScriptRoot\_common.ps1"
 # Windows PowerShell 5.1 -- no &&, no ternary, no ??.
 
 Set-StrictMode -Version 2.0

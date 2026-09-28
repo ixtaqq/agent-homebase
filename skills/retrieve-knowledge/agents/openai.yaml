@@ -1,4 +1,4 @@
 interface:
   display_name: "Retrieve Knowledge"
-  short_description: "Find focused notes in your Codex OS library"
+  short_description: "Find focused notes in your Agent Homebase library"
   default_prompt: "Use $retrieve-knowledge to find what I have saved about this topic."

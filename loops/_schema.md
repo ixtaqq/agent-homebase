@@ -6,7 +6,7 @@ sent on the first pass. Run it with `scripts/loop.ps1 -Loop <name>`.
 ```markdown
 ---
 name: repo-health              # required, matches the filename
-cwd: C:\path\to\repo           # required in practice; defaults to the codex-os root
+cwd: C:\path\to\repo           # required in practice; defaults to the agent-homebase root
 sandbox: workspace-write       # read-only | workspace-write | danger-full-access
 model:                         # optional, defaults to your config.toml model
 profile:                       # optional, layers $CODEX_HOME/<name>.config.toml

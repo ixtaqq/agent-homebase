@@ -3,7 +3,7 @@
 Reusable prompt bodies. Paste one into a thread, or feed it straight to Codex:
 
 ```powershell
-Get-Content E:\Workspace\codex-os\commands\review.md -Raw | codex exec -
+Get-Content E:\Workspace\agent-homebase\commands\review.md -Raw | codex exec -
 ```
 
 These are prompts, not skills: a skill triggers on its own when the situation matches, a command

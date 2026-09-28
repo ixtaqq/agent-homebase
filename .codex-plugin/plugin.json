@@ -1,20 +1,28 @@
 {
-  "name": "codex-os",
+  "name": "agent-homebase",
   "version": "0.1.0",
-  "description": "Personal Codex operating system: reusable skills, loop automations, project templates, and durable memory.",
+  "description": "Shared Codex and Claude Code skills, guidance, memory, and bounded workflows.",
   "author": {
     "name": "ixtaqq"
   },
   "license": "MIT",
-  "keywords": ["workflow", "automation", "loops", "personal"],
+  "keywords": [
+    "workflow",
+    "automation",
+    "loops",
+    "personal"
+  ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Codex OS",
-    "shortDescription": "Personal skills, loops, and standards",
-    "longDescription": "A personal operating system for Codex. Bundles reusable skills (loop-runner, project-bootstrap, memory-keeper, ship-check), headless loop automations driven by codex exec, project templates, and a durable memory store shared across every project.",
+    "displayName": "Agent Homebase",
+    "shortDescription": "Shared skills, guidance, and memory for coding agents",
+    "longDescription": "A shared personal setup for Codex and Claude Code. Includes curated skills, global guidance, durable memory, project templates, and Codex-backed headless loops.",
     "developerName": "ixtaqq",
     "category": "Productivity",
-    "capabilities": ["Interactive", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
     "defaultPrompt": [
       "Bootstrap this repo with an AGENTS.md",
       "Run ship-check on my current changes",

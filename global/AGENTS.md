@@ -1,7 +1,7 @@
 # Personal defaults
 
 These apply to every repo unless a project's own `AGENTS.md` says otherwise.
-Source of truth: `E:\Workspace\codex-os\global\AGENTS.md` — edit there, then run `scripts/sync.ps1`.
+Source of truth: `E:\Workspace\agent-homebase\global\AGENTS.md` — edit there, then run `scripts/sync.ps1`.
 
 ## Environment
 
@@ -33,7 +33,7 @@ Never claim a test passed without having seen it pass.
 
 ## Durable context
 
-- Decisions worth remembering across sessions go in `E:\Workspace\codex-os\memory\entries\`,
+- Decisions worth remembering across sessions go in `E:\Workspace\agent-homebase\memory\entries\`,
   one fact per file, indexed in `memory/INDEX.md`. Use the `memory-keeper` skill.
 - Repo-specific conventions belong in that repo's `AGENTS.md`, not here.
 

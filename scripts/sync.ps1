@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Wires codex-os into Codex and/or Claude Code with shared skill junctions.
+Wires agent-homebase into Codex and/or Claude Code with shared skill junctions.
 
 .DESCRIPTION
 Idempotent. Junctions are live, so editing a SKILL.md here takes effect in the next thread with no

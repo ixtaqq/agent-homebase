@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Validates codex-os repository structure and metadata. Read-only.
+Validates agent-homebase repository structure and metadata. Read-only.
 
 .DESCRIPTION
 Checks required files, skill frontmatter, enabled vendor entries, loop definitions,

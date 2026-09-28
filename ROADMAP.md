@@ -1,4 +1,4 @@
-# Codex OS roadmap
+# Agent Homebase roadmap
 
 ## Phase 1: Personal operating layer
 

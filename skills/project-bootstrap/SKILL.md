@@ -2,12 +2,12 @@
 name: project-bootstrap
 description: Set up a repository for Codex or Claude Code with verified project instructions and settings where needed. Use when the user asks to bootstrap, onboard, or set up a repository for coding agents.
 metadata:
-  short-description: Wire a repo into the personal Codex OS
+  short-description: Wire a repo into the personal Agent Homebase
 ---
 
 # Project Bootstrap
 
-Templates live in `E:\Workspace\codex-os\templates\project\`. They are a starting point, not the
+Templates live in `E:\Workspace\agent-homebase\templates\project\`. They are a starting point, not the
 deliverable — a copied template with placeholders left in is worse than no file at all.
 
 ## Steps
@@ -52,6 +52,6 @@ deliverable — a copied template with placeholders left in is worse than no fil
 ## Do not
 
 - Do not invent commands you did not run.
-- Do not restate global defaults (`E:\Workspace\codex-os\global\AGENTS.md`) in the project file.
+- Do not restate global defaults (`E:\Workspace\agent-homebase\global\AGENTS.md`) in the project file.
   Project `AGENTS.md` is for what is *different* here.
 - Do not add tooling, CI, or dependencies the user did not ask for.

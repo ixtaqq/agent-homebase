@@ -1,4 +1,4 @@
-# Conventions for editing codex-os
+# Conventions for editing agent-homebase
 
 This repo is the source of truth for the shared Codex and Claude Code setup.
 `~/.codex/skills/<name>` and `~/.claude/skills/<name>` are junctions pointing back here.

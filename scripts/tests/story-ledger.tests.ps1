@@ -4,7 +4,7 @@ $ledgerScript = Join-Path $root 'scripts\story-ledger.ps1'
 
 Describe 'story-ledger.ps1' {
     BeforeEach {
-        $testDir = Join-Path $env:TEMP ('codex-os-ledger-' + [guid]::NewGuid().ToString('N'))
+        $testDir = Join-Path $env:TEMP ('agent-homebase-ledger-' + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $testDir | Out-Null
         $ledger = Join-Path $testDir 'stories.json'
         @'

@@ -29,7 +29,7 @@ the frontmatter wins.
 After editing, apply it:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1 -Force
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1 -Force
 ```
 
 `-Force` is needed because disabling a skill means removing a junction sync previously created.
@@ -38,7 +38,7 @@ Without it, disabled entries are reported and left alone.
 ## Updating
 
 ```powershell
-git -C E:\Workspace\codex-os\vendor\mattpocock-skills pull
+git -C E:\Workspace\agent-homebase\vendor\mattpocock-skills pull
 ```
 
 Same for the others. Junctions are live, so a pull takes effect in the next thread — but new skills

@@ -5,6 +5,6 @@ scan here, then open only what looks relevant. Managed by the `memory-keeper` sk
 
 Format: `- [slug](entries/slug.md) — hook`
 
-- [codex-os-wiring](entries/codex-os-wiring.md) — shared Codex/Claude setup, curated ECC, and the choice of one durable memory store
+- [agent-homebase-wiring](entries/agent-homebase-wiring.md) — shared Codex/Claude setup, curated ECC, and the choice of one durable memory store
 - [constrained-language-in-loops](entries/constrained-language-in-loops.md) — the two rules for PowerShell scripts called from inside a sandboxed loop
 - [github-trending-2026-08-10](entries/github-trending-2026-08-10.md) — dated GitHub Trending scan: agent skills, shared memory, and operational tooling

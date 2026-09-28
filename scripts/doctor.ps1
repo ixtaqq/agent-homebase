@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Health check for the codex-os wiring. Read-only.
+Health check for the agent-homebase wiring. Read-only.
 
 .DESCRIPTION
 Reports: skill link state, orphaned junctions left in ~/.codex/skills, drift between

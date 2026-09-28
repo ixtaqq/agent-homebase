@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Reads and updates a deterministic JSON story ledger for Codex OS loops.
+Reads and updates a deterministic JSON story ledger for Agent Homebase loops.
 
 .DESCRIPTION
 Actions:

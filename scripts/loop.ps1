@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Runs a codex-os loop definition headlessly against `codex exec`, pass by pass, until it reports
+Runs a agent-homebase loop definition headlessly against `codex exec`, pass by pass, until it reports
 done, reports blocked, or hits its iteration budget.
 
 .DESCRIPTION

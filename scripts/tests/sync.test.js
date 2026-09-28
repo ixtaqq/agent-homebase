@@ -5,7 +5,7 @@ const os = require('node:os');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
-const scratch = process.argv[2] || path.join(os.tmpdir(), 'codex-os-tests');
+const scratch = process.argv[2] || path.join(os.tmpdir(), 'agent-homebase-tests');
 fs.mkdirSync(scratch, { recursive: true });
 const fixture = fs.mkdtempSync(path.join(scratch, 'sync-'));
 const codex = path.join(fixture, 'codex');

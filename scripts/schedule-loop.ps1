@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Registers, lists, or removes Windows Task Scheduler entries that run codex-os loops.
+Registers, lists, or removes Windows Task Scheduler entries that run agent-homebase loops.
 
 .DESCRIPTION
-Tasks are created under the \CodexOS\ folder and named "CodexOS-<loop>", so they are easy to find
+Tasks are created under the \AgentHomebase\ folder and named "AgentHomebase-<loop>", so they are easy to find
 in Task Scheduler and easy to clean up. Each task runs:
 
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\loop.ps1 -Loop <name>
@@ -35,7 +35,7 @@ param(
     [Parameter(ParameterSetName = 'Logon', Mandatory)][switch]$AtLogon,
     # Unregister the task for this loop.
     [Parameter(ParameterSetName = 'Remove', Mandatory)][switch]$Remove,
-    # Show registered codex-os tasks.
+    # Show registered agent-homebase tasks.
     [Parameter(ParameterSetName = 'List')][switch]$List
 )
 
@@ -43,11 +43,11 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root       = Get-OsRoot
-$taskFolder = '\CodexOS\'
+$taskFolder = '\AgentHomebase\'
 
 if ($PSCmdlet.ParameterSetName -eq 'List') {
     $tasks = @(Get-ScheduledTask -TaskPath $taskFolder -ErrorAction SilentlyContinue)
-    if ($tasks.Count -eq 0) { Write-Host "No codex-os loops are scheduled."; exit 0 }
+    if ($tasks.Count -eq 0) { Write-Host "No agent-homebase loops are scheduled."; exit 0 }
     $tasks | ForEach-Object {
         $info = $_ | Get-ScheduledTaskInfo
         [pscustomobject]@{
@@ -62,7 +62,7 @@ if ($PSCmdlet.ParameterSetName -eq 'List') {
 }
 
 $loopName = $Loop -replace '\.loop\.md$', ''
-$taskName = "CodexOS-$loopName"
+$taskName = "AgentHomebase-$loopName"
 
 if ($Remove) {
     Unregister-ScheduledTask -TaskName $taskName -TaskPath $taskFolder -Confirm:$false
@@ -101,7 +101,7 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnB
     -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
 
 Register-ScheduledTask -TaskName $taskName -TaskPath $taskFolder -Action $action `
-    -Trigger $trigger -Settings $settings -Description "codex-os loop '$loopName' ($desc)" -Force | Out-Null
+    -Trigger $trigger -Settings $settings -Description "agent-homebase loop '$loopName' ($desc)" -Force | Out-Null
 
 Write-Host "Scheduled '$loopName' $desc as $taskFolder$taskName." -ForegroundColor Green
 Write-Host "Logs: $root\logs\$loopName\"

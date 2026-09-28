@@ -1,8 +1,8 @@
-# Codex OS specification
+# Agent Homebase specification
 
 ## Purpose
 
-Codex OS is a personal Windows-first operating layer for Codex and Claude Code: reusable skills,
+Agent Homebase is a personal Windows-first operating layer for Codex and Claude Code: reusable skills,
 explicit workflows, bounded loops, durable memory, and safe installation wiring.
 
 ## Required behavior

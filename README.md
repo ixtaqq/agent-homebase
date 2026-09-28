@@ -1,4 +1,4 @@
-# codex-os
+# agent-homebase
 
 A personal operating system for Codex and Claude Code, as a folder. Skills, standards, templates,
 and memory live here; both tools point back at them so projects share one maintained setup.
@@ -21,25 +21,25 @@ workspace trust, hooks, or plugin registrations.
 Wire everything up (idempotent, safe to re-run):
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1 -Target all
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1 -Target all
 ```
 
 Check the wiring:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\doctor.ps1 -Target all
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\doctor.ps1 -Target all
 ```
 
 Validate the repository itself:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\validate.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\validate.ps1
 ```
 
 Run a loop:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\loop.ps1 -Loop repo-health
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\loop.ps1 -Loop repo-health
 ```
 
 `sync.ps1` takes `-DryRun` and `-Force`. `loop.ps1` takes `-DryRun`, `-MaxIterations`, and
@@ -122,7 +122,7 @@ entries are commented out. Upstream pulls cannot silently remove these local cop
 Enable or disable by editing `enabled.txt`, then:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\codex-os\scripts\sync.ps1 -Target all -Force
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1 -Target all -Force
 ```
 
 `-Force` is required to unlink a disabled skill; without it sync reports it as `STALE` and leaves it.
@@ -148,10 +148,10 @@ before deciding), then run `sync.ps1`.
 ## Scheduling
 
 ```bash
-powershell -NoProfile -File E:\Workspace\codex-os\scripts\schedule-loop.ps1 -Loop repo-health -Daily 09:00
+powershell -NoProfile -File E:\Workspace\agent-homebase\scripts\schedule-loop.ps1 -Loop repo-health -Daily 09:00
 ```
 
-Tasks land under `\CodexOS\` in Task Scheduler. `-List` shows them, `-Remove` unregisters one.
+Tasks land under `\AgentHomebase\` in Task Scheduler. `-List` shows them, `-Remove` unregisters one.
 Registering may need an elevated shell.
 
 ## The plugin manifest

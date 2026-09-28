@@ -29,5 +29,5 @@ Guidance for writing the skill itself (delete this section):
 - Match freedom to fragility: prose for judgment calls, exact commands for fragile sequences.
 - Put long reference material in `references/` and load it only when needed; put runnable code in
   `scripts/`; put output templates in `assets/`.
-- `name` must equal the folder name. Folder goes in `E:\Workspace\codex-os\skills\`, then run
+- `name` must equal the folder name. Folder goes in `E:\Workspace\agent-homebase\skills\`, then run
   `scripts\sync.ps1`.

@@ -1,13 +1,13 @@
 ---
 name: memory-keeper
-description: Record or look up durable cross-session facts — decisions, preferences, constraints, gotchas, and external references — in codex-os/memory. Use when the user says remember this, note that for later, why did we decide X, what did we choose for Y, or when a decision is made that would otherwise have to be re-explained in a future session.
+description: Record or look up durable cross-session facts — decisions, preferences, constraints, gotchas, and external references — in agent-homebase/memory. Use when the user says remember this, note that for later, why did we decide X, what did we choose for Y, or when a decision is made that would otherwise have to be re-explained in a future session.
 metadata:
   short-description: Keep durable decisions and preferences
 ---
 
 # Memory Keeper
 
-Store: `E:\Workspace\codex-os\memory\` — one fact per file in `entries/`, one line per fact in
+Store: `E:\Workspace\agent-homebase\memory\` — one fact per file in `entries/`, one line per fact in
 `INDEX.md`. Read `INDEX.md` first; open an entry only when its line looks relevant.
 
 ## What belongs here

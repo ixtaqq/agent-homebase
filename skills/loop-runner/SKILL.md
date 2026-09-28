@@ -1,6 +1,6 @@
 ---
 name: loop-runner
-description: Run a task as an iterative loop that repeats until an explicit exit condition is met. Use when the work needs repeated passes rather than one shot — polling a build or deploy, grinding a test suite to green, sweeping a codebase file by file, monitoring something on an interval, or any request phrased as "keep going until", "every N minutes", "repeat until it passes". Also use when the user asks to schedule or inspect a headless loop defined in codex-os/loops/.
+description: Run a task as an iterative loop that repeats until an explicit exit condition is met. Use when the work needs repeated passes rather than one shot — polling a build or deploy, grinding a test suite to green, sweeping a codebase file by file, monitoring something on an interval, or any request phrased as "keep going until", "every N minutes", "repeat until it passes". Also use when the user asks to schedule or inspect a headless loop defined in agent-homebase/loops/.
 metadata:
   short-description: Iterate until an exit condition is met
 ---
@@ -14,7 +14,7 @@ Two modes. Pick by whether the loop must survive outside this thread.
 | In-thread | The user is present and the work fits one session | The protocol below |
 | Headless | It runs unattended, on an interval, or scheduled | `scripts/loop.ps1` |
 
-OS root: `E:\Workspace\codex-os`.
+OS root: `E:\Workspace\agent-homebase`.
 
 The in-thread protocol works in both Codex and Claude Code. Headless mode always launches
 `codex exec`; Claude Code can invoke that runner when Codex execution is intended. Do not
@@ -54,7 +54,7 @@ documented in `loops/_schema.md`.
 Run one:
 
 ```powershell
-powershell -NoProfile -File E:\Workspace\codex-os\scripts\loop.ps1 -Loop repo-health
+powershell -NoProfile -File E:\Workspace\agent-homebase\scripts\loop.ps1 -Loop repo-health
 ```
 
 Useful flags: `-MaxIterations <n>` to override the file and `-DryRun` to print the exact `codex exec`
@@ -74,7 +74,7 @@ its own work complete, edit the ledger, commit, or push. Start from `templates/s
 To schedule a loop:
 
 ```powershell
-powershell -NoProfile -File E:\Workspace\codex-os\scripts\schedule-loop.ps1 -Loop repo-health -Daily 09:00
+powershell -NoProfile -File E:\Workspace\agent-homebase\scripts\schedule-loop.ps1 -Loop repo-health -Daily 09:00
 ```
 
 `-List` shows registered loops, `-Remove <loop>` unregisters one.
@@ -96,7 +96,7 @@ deterministic `verification_command`. Do not use it for deployment, billing, liv
 **Calling a `.ps1` from inside a loop:** use the call operator, not `-File`.
 
 ```powershell
-& 'E:\Workspace\codex-os\scripts\doctor.ps1'
+& 'E:\Workspace\agent-homebase\scripts\doctor.ps1'
 ```
 
 Codex runs sandboxed commands through a nested `powershell -Command`, and the outer shell is in

@@ -1,6 +1,6 @@
 ---
 name: tests-to-green
-cwd: E:\Workspace\codex-os
+cwd: E:\Workspace\agent-homebase
 sandbox: workspace-write
 max_iterations: 8
 interval_seconds: 0

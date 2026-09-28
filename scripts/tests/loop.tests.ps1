@@ -13,7 +13,7 @@ Describe 'loop.ps1 dry run' {
     }
 
     It 'uses one ledger story per fresh pass and exposes the deterministic verification gate' {
-        $testDir = Join-Path $env:TEMP ('codex-os-loop-' + [guid]::NewGuid().ToString('N'))
+        $testDir = Join-Path $env:TEMP ('agent-homebase-loop-' + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $testDir | Out-Null
         try {
             $ledger = Join-Path $testDir 'stories.json'
