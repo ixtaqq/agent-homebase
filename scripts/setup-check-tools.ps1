@@ -4,7 +4,7 @@ param([switch]$DryRun)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $lock = Get-Content -LiteralPath (Join-Path $root 'tools-lock.json') -Raw | ConvertFrom-Json
-foreach ($name in @('PSScriptAnalyzer', 'gitleaks')) {
+foreach ($name in @('PSScriptAnalyzer', 'gitleaks', 'vale')) {
     $tool = $lock.$name
     $destination = Join-Path $root "logs\tools\$name\$($tool.version)"
     $marker = Join-Path $destination '.verified'

@@ -1,0 +1,10 @@
+extends: existence
+message: "Replace '%s' with a supported, concrete benefit when it adds no information."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'unlock (?:the |a )?(?:full |true )?potential'
+  - 'supercharge your productivity'
+  - 'game-changing'
+  - 'revolutionary solution'
+  - 'seamless experience'

@@ -2,6 +2,42 @@
   "version": 1,
   "repositories": [
     {
+      "name": "cursor-plugins",
+      "url": "https://github.com/cursor/plugins",
+      "commit": "23e4138daa01c42d4969f7a5465f82704e64f798",
+      "sparse": ["pstack"]
+    },
+    {
+      "name": "humanlayer-skills",
+      "url": "https://github.com/humanlayer/skills",
+      "commit": "ca7c8088db69e315a8b2deea43820270457f8f3c"
+    },
+    {
+      "name": "emilkowalski-skills",
+      "url": "https://github.com/emilkowalski/skills",
+      "commit": "e8a175de22ae1e49370fc144c1f3bb9aeedf988d"
+    },
+    {
+      "name": "humanizer",
+      "url": "https://github.com/blader/humanizer",
+      "commit": "225a6f39ac85f76ee48dbad772ea4abe4ed6c9d8"
+    },
+    {
+      "name": "impeccable",
+      "url": "https://github.com/pbakaus/impeccable",
+      "commit": "e103efe779e2dd01274dabae83531fef00bf2563"
+    },
+    {
+      "name": "autoresearch",
+      "url": "https://github.com/karpathy/autoresearch",
+      "commit": "228791fb499afffb54b46200aca536f79142f117"
+    },
+    {
+      "name": "vercel-agent-skills",
+      "url": "https://github.com/vercel-labs/agent-skills",
+      "commit": "063bee94c3f4df8453406c830b0a7df0f2860278"
+    },
+    {
       "name": "addyosmani-agent-skills",
       "url": "https://github.com/addyosmani/agent-skills",
       "commit": "2686b620fc1fed2e8f60c704839c766b8594c6b6"

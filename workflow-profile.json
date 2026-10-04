@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "skills": [
+    "write-in-my-voice",
+    "technical-writing",
+    "frontend-direction",
+    "visual-critique",
+    "show-me",
+    "visual-pr",
+    "improve-agent-instructions",
+    "narrow-react-prop-types",
+    "design-control-loop",
+    "build-iterated-agentic-loop",
+    "workflow-experiment",
+    "emil-design-eng",
+    "animate",
+    "review-animations",
+    "break-ui",
+    "mobile-native",
+    "pick-ui-library",
+    "ui-prototype"
+  ],
+  "references": [
+    "vendor/cursor-plugins/pstack/skills/unslop",
+    "vendor/cursor-plugins/pstack/skills/technical-writing",
+    "vendor/humanlayer-skills/plugins",
+    "vendor/emilkowalski-skills/skills",
+    "vendor/humanizer/SKILL.md",
+    "vendor/impeccable/skill/reference",
+    "vendor/autoresearch/README.md",
+    "vendor/autoresearch/program.md",
+    "vendor/vercel-agent-skills/skills/react-best-practices",
+    "vendor/vercel-agent-skills/skills/composition-patterns",
+    "vendor/vercel-agent-skills/skills/writing-guidelines",
+    "vendor/vercel-agent-skills/skills/web-design-guidelines"
+  ],
+  "mode": "local-adapters",
+  "notes": "Upstream sources stay unchanged. Impeccable launcher/hooks and original autoresearch execution are not enabled. See WORKFLOW-SETUP.md."
+}

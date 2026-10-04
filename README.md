@@ -3,6 +3,10 @@
 A personal operating system for Codex and Claude Code, as a folder. Skills, standards, templates,
 and memory live here; both tools point back at them so projects share one maintained setup.
 
+The [frontend and writing workflow](WORKFLOW-SETUP.md) adds 18 local adapters, a pinned offline
+prose linter, and a 20-case experiment recorder. Upstream sources stay untouched; the adapters
+replace provider-specific tools and automatic external actions with this setup's rules.
+
 ## How it is wired
 
 `scripts/sync.ps1 -Target all` creates Windows **directory junctions** at
@@ -120,7 +124,7 @@ References: [Claude skills](https://code.claude.com/docs/en/skills),
 ## Vendored skills
 
 `vendor/` holds upstream skill repos; `vendor/enabled.txt` decides which are junctioned into
-both tools' personal skill folders. **48 vendor skills plus 7 local skills are available** — mattpocock's `engineering/` + `productivity/`,
+both tools' personal skill folders. **48 vendor skills plus 25 local skills are available** — mattpocock's `engineering/` + `productivity/`,
 karpathy's guidelines, selected planning/documentation workflows from David Ondrej, selected
 engineering workflows from Addy Osmani, all of taste-skill, and six curated ECC skills for
 verification, loops, GitHub operations, security, repository scanning, and skill audits. ECC's

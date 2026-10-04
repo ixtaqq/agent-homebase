@@ -1,4 +1,9 @@
 {
+  "vale": {
+    "version": "3.24.0",
+    "url": "https://github.com/vale-cli/vale/releases/download/v3.24.0/vale_3.24.0_Windows_64-bit.zip",
+    "sha256": "3a8884774973b6f2826877e1c6388a5feae4704ef88a9a9c912c77ce186990f3"
+  },
   "PSScriptAnalyzer": {
     "version": "1.25.0",
     "url": "https://github.com/PowerShell/PSScriptAnalyzer/releases/download/1.25.0/PSScriptAnalyzer.1.25.0.nupkg",
