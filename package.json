@@ -2,7 +2,7 @@
   "name": "agent-homebase-checks",
   "private": true,
   "scripts": {
-    "test": "node scripts/tests/sync.test.js && node scripts/tests/reliability.test.js && node scripts/tests/quality.test.js && npm run test:workflow",
+    "test": "node scripts/tests/sync.test.js && node scripts/tests/reliability.test.js && node scripts/tests/quality.test.js && node scripts/tests/projects.test.js && npm run test:workflow",
     "test:workflow": "node scripts/tests/writing.test.cjs && node scripts/tests/workflow.test.cjs",
     "eval:workflow": "node evals/workflow.cjs prepare",
     "eval:prepare": "node evals/prepare.cjs",

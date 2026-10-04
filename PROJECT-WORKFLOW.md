@@ -30,3 +30,5 @@ AGENTS.md sync and doctor requirements.
 For a new project, use `project-bootstrap` to inspect its stack and add verified
 project instructions plus a CLAUDE.md import. Global skills are already available;
 project-specific commands still need to be discovered and verified.
+Then run `scripts/projects-doctor.ps1` from this repository; it lists anything still
+missing, such as the Codex trust entry or the Projects README row.

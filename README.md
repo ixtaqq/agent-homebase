@@ -46,6 +46,13 @@ Check the wiring:
 powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\doctor.ps1 -Target all
 ```
 
+Check that every project in `E:\workspace\Projects` is wired up (instructions, `@AGENTS.md`
+import, Codex trust, README row). Use `-Target claude` to skip the Codex trust check:
+
+```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\projects-doctor.ps1
+```
+
 Validate the repository itself:
 
 ```bash
@@ -99,7 +106,7 @@ References: [Claude skills](https://code.claude.com/docs/en/skills),
 | `skills/` | Reusable workflows Codex triggers on its own — one folder each, junctioned into `~/.codex/skills` |
 | `commands/` | Prompt bodies you invoke by hand (`review`, `debug`, `ship-it`) |
 | `loops/` | Loop definitions (`*.loop.md`) for headless, repeating work |
-| `scripts/` | `sync`, `doctor`, `loop`, `story-ledger`, `schedule-loop`, plus the loop status schema |
+| `scripts/` | `sync`, `doctor`, `projects-doctor`, `loop`, `story-ledger`, `schedule-loop`, plus the loop status schema |
 | `SPEC.md`, `ROADMAP.md`, `TASKS.md` | Requirements, phase boundaries, and validated work |
 | `codex-home/agents/` | Read-only Codex role layers copied into `~/.codex/agents/` |
 | `claude-home/agents/` | Read-only Claude roles copied into `~/.claude/agents/` |

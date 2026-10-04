@@ -46,7 +46,11 @@ deliverable — a copied template with placeholders left in is worse than no fil
    Claude Code manages workspace trust in its own interface; do not change Codex settings for
    a Claude-only setup.
 
-6. **Report** which files were created, which commands you verified, and anything you could not
+6. **For a repo under `E:\workspace\Projects`**, add its row to that folder's `README.md`, then run
+   `powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\projects-doctor.ps1`
+   (add `-Target claude` for a Claude-only setup) and resolve what it reports for this project.
+
+7. **Report** which files were created, which commands you verified, and anything you could not
    determine and left out.
 
 ## Do not
