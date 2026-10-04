@@ -20,6 +20,10 @@ Source of truth: `E:\Workspace\agent-homebase\global\AGENTS.md` — edit there, 
 - Prefer reusing an existing function over writing a parallel one. Search before adding.
 - No defensive scaffolding that wasn't asked for: no speculative config flags, no unused abstraction
   layers, no try/catch that swallows errors.
+- If an approach fails twice or the plan stops matching reality, stop and re-plan instead of
+  patching on top of it.
+- For bug reports: reproduce, read the logs or failing test, find the root cause, then fix it.
+  Don't ask for step-by-step guidance.
 
 ## Verification bar
 
@@ -35,6 +39,7 @@ Never claim a test passed without having seen it pass.
 
 - Decisions worth remembering across sessions go in `E:\Workspace\agent-homebase\memory\entries\`,
   one fact per file, indexed in `memory/INDEX.md`. Use the `memory-keeper` skill.
+- When I correct a pattern that would recur, record it with `memory-keeper`. Skip one-off fixes.
 - Repo-specific conventions belong in that repo's `AGENTS.md`, not here.
 
 ## Safety
