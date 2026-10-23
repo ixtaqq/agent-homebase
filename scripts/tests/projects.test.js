@@ -7,7 +7,8 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
 const scratch = process.argv[2] || path.join(os.tmpdir(), 'agent-homebase-tests');
 fs.mkdirSync(scratch, { recursive: true });
-const fixture = fs.mkdtempSync(path.join(scratch, 'projects-'));
+// realpath expands 8.3 short names (CI runners use C:\Users\RUNNER~1) so trust keys match the doctor.
+const fixture = fs.realpathSync.native(fs.mkdtempSync(path.join(scratch, 'projects-')));
 const workspace = path.join(fixture, 'Projects');
 const codexHome = path.join(fixture, 'codex');
 let passed = 0;

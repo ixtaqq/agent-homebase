@@ -30,6 +30,8 @@ Write-Output '{"type":"thread.started","thread_id":"00000000-0000-0000-0000-0000
 if ($env:TEST_FAIL -eq '1') { exit 7 }
 exit 0
 `);
+env.CODEX_HOME = path.join(fixture, 'codex-home');
+fs.mkdirSync(env.CODEX_HOME);
 env.CODEX_EXE = mock;
 env.TEST_CALLS = calls;
 const loop = path.join(fixture, 'test.loop.md');

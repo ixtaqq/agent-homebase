@@ -2,7 +2,8 @@
 
 <One sentence: what this is and who uses it.>
 
-Personal defaults live in `~/.codex/AGENTS.md`. This file covers only what is different here.
+Shared workflow: read `E:\Workspace\agent-homebase\PROJECT-WORKFLOW.md`. Personal defaults load
+globally for Codex and Claude Code. This file covers only what is different here.
 Delete any section below you cannot fill with something specific.
 
 ## Stack

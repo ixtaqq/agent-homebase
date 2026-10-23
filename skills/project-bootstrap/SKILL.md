@@ -23,8 +23,9 @@ deliverable — a copied template with placeholders left in is worse than no fil
    - conventions the code already follows — naming, error handling, test style,
    - the verification bar for this repo.
 
+   Keep the template's pointer to `PROJECT-WORKFLOW.md`; `projects-doctor.ps1` checks for it.
    Delete every section you could not fill with something specific. Aim for under 50 lines.
-   If `AGENTS.md` already exists, extend it — never overwrite.
+   If `AGENTS.md` already exists, extend it — never overwrite — and add the pointer if missing.
 
 3. **For Claude Code or a shared setup, add `<repo>/CLAUDE.md`** containing `@AGENTS.md`
    from `templates/project/CLAUDE.md`. If it already exists, preserve its instructions and add
