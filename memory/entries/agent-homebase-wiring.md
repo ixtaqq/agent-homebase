@@ -28,7 +28,8 @@ prefixed prompt commands are copied by the same sync script with `-Target all`.
 without introducing a second competing memory store or a duplicate full ECC installation.
 Headless loops remain Codex-backed; ordinary in-session workflows use the current tool.
 
-**Applies to:** Codex and Claude Code on this machine. See [[loop-status-contract]].
+**Applies to:** Codex and Claude Code on this machine. See [[constrained-language-in-loops]]; the loop status contract is
+documented in `loops/_schema.md`.
 
 **Renamed 2026-09-28:** The user chose `agent-homebase` for the local directory,
 GitHub repository, and shared setup. The same junction and memory design continues

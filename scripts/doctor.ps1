@@ -97,7 +97,7 @@ function Read-FrontMatterFile {
 if ($Target -eq 'claude') {
     $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
     if ($claudeCmd) { Add-Finding 'claude' 'claude' 'OK' $claudeCmd.Source }
-    else { Add-Finding 'claude' 'claude' 'FAIL' 'Claude Code is not on PATH' }
+    else { Add-Finding 'claude' 'claude' 'WARN' 'CLI not on PATH (the desktop app does not need it)' }
 } else {
     $codexCmd = Get-Command codex -ErrorAction SilentlyContinue
     if ($codexCmd) {
