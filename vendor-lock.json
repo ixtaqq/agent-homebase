@@ -74,6 +74,29 @@
       "name": "taste-skill",
       "url": "https://github.com/leonxlnx/taste-skill",
       "commit": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b"
+    },
+    {
+      "name": "trailofbits-skills",
+      "url": "https://github.com/trailofbits/skills",
+      "commit": "196a9073ab10d35bacf111f945e02c00b2c6883a",
+      "sparse": [
+        "plugins/supply-chain-risk-auditor",
+        "plugins/static-analysis",
+        "plugins/differential-review"
+      ]
+    },
+    {
+      "name": "cybersecurity-skills",
+      "url": "https://github.com/briiirussell/cybersecurity-skills",
+      "commit": "c9ade0349f8ecd5c9c68a82a05d2b6012c5fa1d7"
+    },
+    {
+      "name": "humanlayer",
+      "url": "https://github.com/humanlayer/humanlayer",
+      "commit": "cbaf99b79446a914a0136c8eb93617b63dd424d6",
+      "sparse": [
+        "apps/riptide-rpi-claude-plugin"
+      ]
     }
   ]
 }
