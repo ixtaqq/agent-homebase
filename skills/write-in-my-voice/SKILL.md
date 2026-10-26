@@ -9,7 +9,7 @@ Establish the claims the draft must preserve, including numbers, uncertainty, co
 
 For AI-pattern edits, read [Humanizer](E:/Workspace/agent-homebase/vendor/humanizer/SKILL.md) in embedded mode and [pstack unslop](E:/Workspace/agent-homebase/vendor/cursor-plugins/pstack/skills/unslop/SKILL.md) as editorial references. This adapter takes precedence over their output templates and blanket style bans: preserve deliberate voice, valid contrasts, technical terms, and necessary uncertainty. Do not add opinions or reactions on the author's behalf. Return the finished prose unless the user requests an edit explanation. Leave already-good writing alone.
 
-For technical documentation, use [technical-writing](../technical-writing/SKILL.md). For UI copy, make actions, state, and recovery clear in the actual space available. For research, attach sources to supported claims and distinguish inference. For marketing, substantiate the offer; do not invent proof. For scripts, read the text as speech and retain source facts.
+For technical documentation, use [technical-writing](E:/Workspace/agent-homebase/vendor/cursor-plugins/pstack/skills/technical-writing/SKILL.md). For UI copy, make actions, state, and recovery clear in the actual space available. For research, attach sources to supported claims and distinguish inference. For marketing, substantiate the offer; do not invent proof. For scripts, read the text as speech and retain source facts.
 
 Run a final before/after fact comparison. A stylistic improvement that changes a material claim is a regression. Do not optimize for AI-detector scores.
 

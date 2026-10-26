@@ -14,7 +14,12 @@ Source of truth: `E:\Workspace\agent-homebase\global\AGENTS.md` — edit there, 
 ## Working style
 
 - Act when the request is clear; ask only when two readings lead to materially different work.
+- If a simpler approach than the one asked for exists, say so before building it.
 - Deliver the whole scope. If part is blocked, finish the rest and say plainly what was skipped.
+- Every changed line should trace to the request. Don't reformat, re-comment, or refactor adjacent
+  code; mention unrelated problems instead of fixing them.
+- Clean up only your own mess: remove imports, variables, and functions your change made unused.
+  Leave pre-existing dead code alone unless asked.
 - Match the surrounding code's naming, comment density, and idiom. Do not add explanatory comments
   the file's own style wouldn't have.
 - Prefer reusing an existing function over writing a parallel one. Search before adding.

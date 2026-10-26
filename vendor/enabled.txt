@@ -12,11 +12,11 @@ mattpocock-skills/skills/engineering/domain-modeling
 mattpocock-skills/skills/engineering/grill-with-docs
 mattpocock-skills/skills/engineering/implement
 mattpocock-skills/skills/engineering/improve-codebase-architecture
-mattpocock-skills/skills/engineering/prototype
+# mattpocock-skills/skills/engineering/prototype  (emilkowalski prototype wins the name)
 mattpocock-skills/skills/engineering/research
 mattpocock-skills/skills/engineering/resolving-merge-conflicts
 mattpocock-skills/skills/engineering/setup-matt-pocock-skills
-mattpocock-skills/skills/engineering/tdd
+# mattpocock-skills/skills/engineering/tdd  (pstack tdd wins the name)
 mattpocock-skills/skills/engineering/to-spec
 mattpocock-skills/skills/engineering/to-tickets
 mattpocock-skills/skills/engineering/triage
@@ -26,11 +26,11 @@ mattpocock-skills/skills/engineering/wayfinder
 mattpocock-skills/skills/productivity/grill-me
 mattpocock-skills/skills/productivity/grilling
 mattpocock-skills/skills/productivity/handoff
-mattpocock-skills/skills/productivity/teach
+# mattpocock-skills/skills/productivity/teach  (pstack teach wins the name)
 mattpocock-skills/skills/productivity/writing-for-agents
 
 # --- multica-ai/andrej-karpathy-skills ---
-andrej-karpathy-skills/skills/karpathy-guidelines
+# andrej-karpathy-skills/skills/karpathy-guidelines  (key rules folded into global/AGENTS.md)
 
 # --- davidondrej/skills : selected no-cost planning and documentation ---
 davidondrej-skills/skills/thinking-and-docs/ask-then-build
@@ -90,3 +90,109 @@ ecc/skills/repo-scan
 ecc/skills/security-review
 ecc/skills/skill-stocktake
 ecc/skills/verification-loop
+
+# --- trailofbits/skills : dependency audit, static analysis, security diff review ---
+# Sparse checkout of three plugins. semgrep and codeql need those CLIs installed.
+trailofbits-skills/plugins/supply-chain-risk-auditor/skills/supply-chain-risk-auditor
+trailofbits-skills/plugins/static-analysis/skills/semgrep
+trailofbits-skills/plugins/static-analysis/skills/codeql
+trailofbits-skills/plugins/differential-review/skills/differential-review
+
+# --- briiirussell/cybersecurity-skills : threat modeling only ---
+cybersecurity-skills/skills/threat-modeling
+
+# === Main repos: upstream skills replace the old local adapters (retired-skills/) ===
+
+# --- emilkowalski/skills : all ---
+emilkowalski-skills/skills/animate-expo
+emilkowalski-skills/skills/animate
+emilkowalski-skills/skills/animation-vocabulary
+emilkowalski-skills/skills/apple-design
+emilkowalski-skills/skills/ask-sonner
+emilkowalski-skills/skills/break-ui
+emilkowalski-skills/skills/emil-design-eng
+emilkowalski-skills/skills/find-animation-opportunities
+emilkowalski-skills/skills/improve-animations
+emilkowalski-skills/skills/mobile-native
+emilkowalski-skills/skills/pick-ui-library
+emilkowalski-skills/skills/prototype
+emilkowalski-skills/skills/review-animations
+emilkowalski-skills/skills/write-swift
+
+# --- cursor/plugins pstack : portable skills (Cursor-bound ones left off) ---
+# Off: swarm, arena, setup-pstack, recall, reflect, automate-me (Cursor models/transcripts),
+# make-bot-ui, poteto-mode (names with spaces), automations/benny (Slack bot).
+cursor-plugins/pstack/skills/architect
+cursor-plugins/pstack/skills/benchmark-checklist
+cursor-plugins/pstack/skills/blast-radius
+cursor-plugins/pstack/skills/bro
+cursor-plugins/pstack/skills/create-verification-skill
+cursor-plugins/pstack/skills/figure-it-out
+cursor-plugins/pstack/skills/how
+cursor-plugins/pstack/skills/interrogate
+cursor-plugins/pstack/skills/maintain-verification-skill
+cursor-plugins/pstack/skills/no-comments
+cursor-plugins/pstack/skills/principle-attack-the-premise
+cursor-plugins/pstack/skills/principle-boundary-discipline
+cursor-plugins/pstack/skills/principle-build-the-lever
+cursor-plugins/pstack/skills/principle-encode-lessons-in-structure
+cursor-plugins/pstack/skills/principle-exhaust-the-design-space
+cursor-plugins/pstack/skills/principle-experience-first
+cursor-plugins/pstack/skills/principle-explain-the-number
+cursor-plugins/pstack/skills/principle-fix-root-causes
+cursor-plugins/pstack/skills/principle-foundational-thinking
+cursor-plugins/pstack/skills/principle-guard-the-context-window
+cursor-plugins/pstack/skills/principle-laziness-protocol
+cursor-plugins/pstack/skills/principle-make-operations-idempotent
+cursor-plugins/pstack/skills/principle-migrate-callers-then-delete-legacy-apis
+cursor-plugins/pstack/skills/principle-minimize-reader-load
+cursor-plugins/pstack/skills/principle-model-the-domain
+cursor-plugins/pstack/skills/principle-never-block-on-the-human
+cursor-plugins/pstack/skills/principle-outcome-oriented-execution
+cursor-plugins/pstack/skills/principle-prove-it-works
+cursor-plugins/pstack/skills/principle-redesign-from-first-principles
+cursor-plugins/pstack/skills/principle-separate-before-serializing-shared-state
+cursor-plugins/pstack/skills/principle-sequence-verifiable-units
+cursor-plugins/pstack/skills/principle-subtract-before-you-add
+cursor-plugins/pstack/skills/principle-test-behavior-not-implementation
+cursor-plugins/pstack/skills/principle-type-system-discipline
+cursor-plugins/pstack/skills/show-me-your-work
+cursor-plugins/pstack/skills/tdd
+cursor-plugins/pstack/skills/teach
+cursor-plugins/pstack/skills/technical-writing
+cursor-plugins/pstack/skills/typescript-best-practices
+cursor-plugins/pstack/skills/unslop
+cursor-plugins/pstack/skills/why
+
+# --- humanlayer/skills : upstream versions of the retired adapters ---
+# improve-claude-md left off; the local improve-agent-instructions adapter covers it.
+humanlayer-skills/plugins/build-iterated-agentic-loop/skills/build-iterated-agentic-loop
+humanlayer-skills/plugins/design-control-loop/skills/design-control-loop
+humanlayer-skills/plugins/narrow-react-prop-types/skills/narrow-react-prop-types
+humanlayer-skills/plugins/show-me/skills/show-me
+humanlayer-skills/plugins/visual-pr/skills/visual-pr
+
+# --- humanlayer/humanlayer : Research-Plan-Implement plugin (sparse) ---
+# review-artifact-comments needs the HumanLayer MCP server.
+humanlayer/apps/riptide-rpi-claude-plugin/skills/ci-commit
+humanlayer/apps/riptide-rpi-claude-plugin/skills/configure-workspaces
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-design-discussion
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-plan
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-prd
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-research-questions
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-research
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-structure-outline
+humanlayer/apps/riptide-rpi-claude-plugin/skills/create-tdd
+humanlayer/apps/riptide-rpi-claude-plugin/skills/describe-pr
+humanlayer/apps/riptide-rpi-claude-plugin/skills/implement-outline
+humanlayer/apps/riptide-rpi-claude-plugin/skills/implement-plan
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-design-discussion
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-implementation
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-plan
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-prd
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-research-questions
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-research
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-structure-outline
+humanlayer/apps/riptide-rpi-claude-plugin/skills/iterate-tdd
+humanlayer/apps/riptide-rpi-claude-plugin/skills/review-artifact-comments
+humanlayer/apps/riptide-rpi-claude-plugin/skills/setup-worktree
