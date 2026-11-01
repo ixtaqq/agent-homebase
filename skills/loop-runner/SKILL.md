@@ -16,9 +16,8 @@ Two modes. Pick by whether the loop must survive outside this thread.
 
 OS root: `E:\Workspace\agent-homebase`.
 
-The in-thread protocol works in both Codex and Claude Code. Headless mode always launches
-`codex exec`; Claude Code can invoke that runner when Codex execution is intended. Do not
-describe the headless runner as a Claude backend or start a second CLI for ordinary in-thread work.
+Headless mode launches a separate `claude -p` process per pass and needs the Claude Code CLI
+installed. Do not start it for ordinary in-thread work.
 
 ## In-thread protocol
 
@@ -57,17 +56,18 @@ Run one:
 powershell -NoProfile -File E:\Workspace\agent-homebase\scripts\loop.ps1 -Loop repo-health
 ```
 
-Useful flags: `-MaxIterations <n>` to override the file and `-DryRun` to print the exact `codex exec`
+Useful flags: `-MaxIterations <n>` to override the file and `-DryRun` to print the exact `claude`
 commands without running them.
 
-The runner drives `codex exec` with `--output-schema scripts/schemas/loop-status.schema.json`, so
-every pass returns `{status, summary, next_action}` as JSON. The runner reads `status` and stops on
-`done`, `blocked`, or `max_iterations`. Per-pass output lands in
-`logs/<loop>/<run-timestamp>/iter-N.json`, with a human log alongside it. It records the session ID
-emitted by the first pass and resumes that exact session; it never uses a global last-session selector.
+The runner drives `claude -p --output-format json --json-schema` with
+`scripts/schemas/loop-status.schema.json`, so every pass returns `{status, summary, next_action}`.
+The runner reads `status` and stops on `done`, `blocked`, or `max_iterations`. Per-pass output lands
+in `logs/<loop>/<run-timestamp>/iter-N.json`, with a human log alongside it. It gives pass one a
+session ID with `--session-id` and resumes that exact session with `--resume`; it never uses
+`--continue`.
 
 For multi-story implementation work, add `story_ledger` and `verification_command` to the loop
-definition. Story mode selects one pending story per pass, forces a fresh Codex context, and marks
+definition. Story mode selects one pending story per pass, forces a fresh Claude session, and marks
 the story complete only after the runner's verification command exits zero. The model cannot mark
 its own work complete, edit the ledger, commit, or push. Start from `templates/story-ledger.json`.
 
@@ -85,22 +85,19 @@ Copy an existing `.loop.md`, then check three things:
 
 - `cwd` points at a directory that exists.
 - `exit_when` is checkable by a command, and the prompt body says which command.
-- `sandbox` is the least permission the work needs — `read-only` for monitors, `workspace-write`
-  for anything that edits files. Never bypass approvals.
+- `permission_mode` is the least permission the work needs. Nobody answers prompts headlessly,
+  so list every command the loop must run in `allowed_tools` — `dontAsk` plus an exact
+  allow-list for monitors, `acceptEdits` or `auto` for work that edits files. Never bypass
+  permissions.
 
 Keep the prompt body outcome-shaped: what should be true when it ends, what evidence proves it.
 
 In story mode, keep one small story per pass, write explicit acceptance criteria, and configure a
 deterministic `verification_command`. Do not use it for deployment, billing, live trading, or secrets.
 
-**Calling a `.ps1` from inside a loop:** use the call operator, not `-File`.
+**Calling a `.ps1` from inside a loop:** Claude's Bash tool is Git Bash, so name the exact command
+in the prompt and allow that same string in `allowed_tools`:
 
-```powershell
-& 'E:\Workspace\agent-homebase\scripts\doctor.ps1'
 ```
-
-Codex runs sandboxed commands through a nested `powershell -Command`, and the outer shell is in
-ConstrainedLanguage mode. `-File` across that boundary is treated as dot-sourcing and fails with
-"Cannot dot-source this command because it was defined in a different language mode." Scripts a loop
-calls must also avoid .NET type literals and method calls, which ConstrainedLanguage blocks —
-`scripts/doctor.ps1` is written that way on purpose and is the working reference.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File E:/Workspace/agent-homebase/scripts/doctor.ps1
+```

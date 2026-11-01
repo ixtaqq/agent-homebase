@@ -1,15 +1,18 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = (Resolve-Path (Join-Path $here '..\..')).Path
 $loop = Join-Path $root 'scripts\loop.ps1'
+# Dry runs only print commands; a placeholder lets them run where the claude CLI is not installed.
+if (-not $env:CLAUDE_EXE) { $env:CLAUDE_EXE = 'claude' }
 
 Describe 'loop.ps1 dry run' {
-    It 'resumes the session started by pass one instead of the global last session' {
+    It 'resumes the session started by pass one instead of the most recent session' {
         $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $loop -Loop repo-health -DryRun 2>&1
 
         $text = $output -join "`n"
-        $text | Should Match '--json'
-        $text | Should Match 'exec .* resume <session-id from pass 1>'
-        $text | Should Not Match 'resume --last'
+        $text | Should Match '--output-format json --json-schema'
+        $text -match '--session-id ([0-9a-f-]{36})' | Should Be $true
+        $text | Should Match ('--resume ' + $matches[1])
+        $text | Should Not Match '--continue'
     }
 
     It 'uses one ledger story per fresh pass and exposes the deterministic verification gate' {
@@ -25,7 +28,7 @@ Describe 'loop.ps1 dry run' {
 ---
 name: ledger-test
 cwd: $testDir
-sandbox: workspace-write
+permission_mode: acceptEdits
 max_iterations: 2
 exit_when: all ledger stories are complete
 story_ledger: $ledger
@@ -40,13 +43,13 @@ Implement the current story only.
 
             $text | Should Match 'story=S1'
             $text | Should Match 'verification_command: exit 0'
-            $text | Should Not Match '\bresume\b'
+            $text | Should Not Match '--resume'
         } finally { Write-Host "Fixtures retained: $testDir" }
     }
 }
 
 Describe 'sync.ps1 safety contract' {
-    It 'preserves user files and shares skills across isolated Codex and Claude homes' {
+    It 'preserves user files and links skills into an isolated Claude home' {
         & node (Join-Path $root 'scripts\tests\sync.test.js')
         $LASTEXITCODE | Should Be 0
     }

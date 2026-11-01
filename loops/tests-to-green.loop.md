@@ -1,7 +1,7 @@
 ---
 name: tests-to-green
 cwd: E:\Workspace\agent-homebase
-sandbox: workspace-write
+permission_mode: auto
 max_iterations: 8
 interval_seconds: 0
 exit_when: the project's full test command exits 0
@@ -10,7 +10,7 @@ exit_when: the project's full test command exits 0
 Drive this repository's test suite to green.
 
 Pass one: find the real test command (package manifest scripts, Makefile, CI workflow, the repo's
-AGENTS.md) and run it. State which command you chose.
+AGENTS.md or CLAUDE.md) and run it. State which command you chose.
 
 Every pass after that: take the single most-informative failure, fix its actual cause, and re-run
 the suite. One failure per pass.

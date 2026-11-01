@@ -10,7 +10,7 @@
   {
     "description": "Bootstrap planning preserves existing project instructions",
     "skill": "project-bootstrap",
-    "request": "Plan how to bootstrap this repository for Codex and Claude Code. Inspect the existing project instructions and preserve the Finch naming rule. This is a read-only planning pass: do not create or edit files. Name the instruction files you would use.",
+    "request": "Plan how to bootstrap this repository for Claude Code. Inspect the existing project instructions and preserve the Finch naming rule. This is a read-only planning pass: do not create or edit files. Name the instruction files you would use.",
     "pattern": "(?=.*AGENTS\\.md)(?=.*CLAUDE\\.md)(?=.*Finch)",
     "good": "Preserve the Finch naming rule in AGENTS.md; use CLAUDE.md to import it.",
     "bad": "Replace the existing instructions with my defaults."

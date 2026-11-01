@@ -1,4 +1,4 @@
-// Integration checks use isolated config homes and retain fixtures for inspection.
+// Integration checks use an isolated config home and retain fixtures for inspection.
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
@@ -8,10 +8,8 @@ const root = path.resolve(__dirname, '../..');
 const scratch = process.argv[2] || path.join(os.tmpdir(), 'agent-homebase-tests');
 fs.mkdirSync(scratch, { recursive: true });
 const fixture = fs.mkdtempSync(path.join(scratch, 'sync-'));
-const codex = path.join(fixture, 'codex');
 const claude = path.join(fixture, 'claude');
-fs.mkdirSync(codex);
-const env = { ...process.env, CODEX_HOME: codex, CLAUDE_CONFIG_DIR: claude };
+const env = { ...process.env, CLAUDE_CONFIG_DIR: claude };
 // Node does not sanitize a PowerShell 7 module path when launching Windows PowerShell 5.1.
 for (const key of Object.keys(env)) {
   if (key.toLowerCase() === 'psmodulepath') delete env[key];
@@ -45,62 +43,56 @@ function backups(file) {
     .filter(name => name.startsWith(path.basename(file) + '.') && name.endsWith('.bak'))
     .map(name => path.join(path.dirname(file), name));
 }
-function assertSharedSkills() {
-  const first = fs.readdirSync(path.join(codex, 'skills')).sort();
-  const second = fs.readdirSync(path.join(claude, 'skills')).sort();
-  assert.deepEqual(first, second);
-  assert.ok(first.length >= 54);
-  for (const name of first) {
-    const a = path.join(codex, 'skills', name);
-    const b = path.join(claude, 'skills', name);
-    assert.equal(fs.realpathSync(a), fs.realpathSync(b));
-    assert.ok(fs.existsSync(path.join(b, 'SKILL.md')));
+function assertLinkedSkills() {
+  const names = fs.readdirSync(path.join(claude, 'skills')).sort();
+  assert.ok(names.length >= 54);
+  for (const name of names) {
+    const link = path.join(claude, 'skills', name);
+    assert.ok(fs.realpathSync(link).startsWith(root), `${name} does not point into the repo`);
+    assert.ok(fs.existsSync(path.join(link, 'SKILL.md')));
   }
 }
 
 try {
   check('dry run makes no config directories or files', () => {
-    run('sync.ps1', ['-Target', 'all', '-DryRun']);
-    assert.deepEqual(fs.readdirSync(codex), []);
+    run('sync.ps1', ['-DryRun']);
     assert.equal(fs.existsSync(claude), false);
   });
-  check('both targets load the same skill sources, with separate roles and guidance', () => {
-    run('sync.ps1', ['-Target', 'all']);
-    assertSharedSkills();
-    for (const [dest, source] of [[path.join(codex, 'AGENTS.md'), 'global/AGENTS.md'],
-      [path.join(claude, 'CLAUDE.md'), 'global/CLAUDE.md'],
+  check('sync links skill sources and copies guidance, commands, and roles', () => {
+    run('sync.ps1', []);
+    assertLinkedSkills();
+    for (const [dest, source] of [[path.join(claude, 'CLAUDE.md'), 'global/CLAUDE.md'],
       [path.join(claude, 'commands/os-debug.md'), 'commands/debug.md'],
       [path.join(claude, 'agents/os-reviewer.md'), 'claude-home/agents/os-reviewer.md']]) {
       assert.deepEqual(fs.readFileSync(dest), fs.readFileSync(path.join(root, source)));
     }
-    assert.equal(fs.existsSync(path.join(claude, 'agents/reviewer.toml')), false);
   });
   check('second sync is idempotent', () => {
     const before = snapshot(fixture);
-    run('sync.ps1', ['-Target', 'all']);
+    run('sync.ps1', []);
     assert.deepEqual(snapshot(fixture), before);
   });
-  check('doctor validates both isolated installations', () => {
-    run('doctor.ps1', ['-Target', 'all']);
+  check('doctor validates the isolated installation', () => {
+    run('doctor.ps1', []);
   });
-  check('existing Claude instructions are preserved; drift propagates through all', () => {
+  check('existing Claude instructions are preserved and reported as drift', () => {
     const file = path.join(claude, 'CLAUDE.md');
     fs.appendFileSync(file, '\nPersonal instruction to preserve.\n');
     const original = fs.readFileSync(file);
-    run('sync.ps1', ['-Target', 'all'], 1);
+    run('sync.ps1', [], 1);
     assert.deepEqual(fs.readFileSync(file), original);
-    run('doctor.ps1', ['-Target', 'all'], 1);
+    run('doctor.ps1', [], 1);
     const before = snapshot(fixture);
-    run('sync.ps1', ['-Target', 'claude', '-Force', '-DryRun']);
+    run('sync.ps1', ['-Force', '-DryRun']);
     assert.deepEqual(snapshot(fixture), before);
-    run('sync.ps1', ['-Target', 'claude', '-Force']);
+    run('sync.ps1', ['-Force']);
     assert.deepEqual(fs.readFileSync(backups(file)[0]), original);
   });
   check('modified Claude command and agent role are preserved without Force', () => {
     const files = ['commands/os-debug.md', 'agents/os-reviewer.md'].map(p => path.join(claude, p));
     for (const file of files) fs.appendFileSync(file, '\nPersonal addition.\n');
     const before = files.map(file => fs.readFileSync(file));
-    run('sync.ps1', ['-Target', 'claude'], 1);
+    run('sync.ps1', [], 1);
     files.forEach((file, i) => assert.deepEqual(fs.readFileSync(file), before[i]));
   });
   check('real skill directory is never replaced, including with Force', () => {
@@ -109,7 +101,7 @@ try {
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(path.join(skillDir, 'personal.txt'), 'Keep this data');
     env.CLAUDE_CONFIG_DIR = alternate;
-    run('sync.ps1', ['-Target', 'claude', '-Force'], 1);
+    run('sync.ps1', ['-Force'], 1);
     assert.equal(fs.lstatSync(skillDir).isSymbolicLink(), false);
     assert.equal(fs.readFileSync(path.join(skillDir, 'personal.txt'), 'utf8'), 'Keep this data');
   });
@@ -120,7 +112,7 @@ try {
       const old = files.flatMap(file => backups(file)).map(file => [file, fs.readFileSync(file)]);
       for (const file of files) fs.appendFileSync(file, `\nRevision ${pass}\n`);
       const originals = files.map(file => fs.readFileSync(file));
-      run('sync.ps1', ['-Target', 'claude', '-Force']);
+      run('sync.ps1', ['-Force']);
       old.forEach(([file, content]) => assert.deepEqual(fs.readFileSync(file), content));
       files.forEach((file, i) => assert.ok(backups(file).some(backup => fs.readFileSync(backup).equals(originals[i]))));
     }

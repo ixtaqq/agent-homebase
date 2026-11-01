@@ -4,7 +4,7 @@ Validates agent-homebase repository structure and metadata. Read-only.
 
 .DESCRIPTION
 Checks required files, skill frontmatter, enabled vendor entries, loop definitions,
-the plugin manifest, and forbidden runtime files. It does not inspect or change ~/.codex.
+and forbidden runtime files. It does not inspect or change ~/.claude.
 #>
 [CmdletBinding()]
 param()
@@ -30,25 +30,14 @@ function Test-RequiredFile {
 
 $requiredFiles = @(
     'AGENTS.md', 'README.md', 'SPEC.md', 'ROADMAP.md', 'TASKS.md',
-    '.codex-plugin\plugin.json', 'global\AGENTS.md', 'global\CLAUDE.md', 'CLAUDE.md', 'vendor\enabled.txt',
+    'global\AGENTS.md', 'global\CLAUDE.md', 'CLAUDE.md', 'vendor\enabled.txt',
     'scripts\doctor.ps1', 'scripts\loop.ps1', 'scripts\sync.ps1',
     'scripts\validate.ps1', 'scripts\schemas\loop-status.schema.json',
-    'codex-home\agents\explorer.toml', 'codex-home\agents\reviewer.toml',
-    'codex-home\agents\docs-researcher.toml', 'templates\project\CLAUDE.md',
+    'templates\project\CLAUDE.md',
     'claude-home\agents\os-explorer.md', 'claude-home\agents\os-reviewer.md',
     'claude-home\agents\os-docs-researcher.md'
 )
 foreach ($file in $requiredFiles) { Test-RequiredFile $file }
-
-$pluginPath = Join-Path $root '.codex-plugin\plugin.json'
-if (Test-Path -LiteralPath $pluginPath -PathType Leaf) {
-    try {
-        $plugin = Get-Content -LiteralPath $pluginPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if (-not $plugin.name -or -not $plugin.skills) { Add-ValidationError 'plugin manifest needs name and skills' }
-    } catch {
-        Add-ValidationError "invalid plugin manifest: $($_.Exception.Message)"
-    }
-}
 
 $claimedSkills = @{}
 $skillsRoot = Join-Path $root 'skills'
@@ -92,6 +81,9 @@ foreach ($loop in (Get-ChildItem -LiteralPath $loopsRoot -Filter '*.loop.md' -Fi
     if (-not $parsed.Meta.ContainsKey('exit_when')) { Add-ValidationError "loop has no exit_when: $($loop.Name)" }
     $cwd = Get-MetaValue $parsed.Meta 'cwd' $root
     if (-not (Test-Path -LiteralPath $cwd -PathType Container)) { Add-ValidationError "loop cwd does not exist: $($loop.Name)" }
+    if ($parsed.Meta.ContainsKey('sandbox')) { Add-ValidationError "loop uses the Codex sandbox key; use permission_mode: $($loop.Name)" }
+    $mode = Get-MetaValue $parsed.Meta 'permission_mode' 'acceptEdits'
+    if ($mode -notin @('plan', 'dontAsk', 'acceptEdits', 'auto', 'default')) { Add-ValidationError "loop has invalid permission_mode '$mode': $($loop.Name)" }
 }
 
 $repoFiles = @(& git -C $root -c core.quotepath=false ls-files --cached --others --exclude-standard)

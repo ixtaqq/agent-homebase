@@ -31,6 +31,21 @@ Headless loops remain Codex-backed; ordinary in-session workflows use the curren
 **Applies to:** Codex and Claude Code on this machine. See [[constrained-language-in-loops]]; the loop status contract is
 documented in `loops/_schema.md`.
 
+**Updated 2026-11-01:** The user wanted every project to pick up changes here automatically.
+A user-level `SessionStart` hook in `~/.claude/settings.json` (matcher `startup`) runs
+`sync.ps1` silently on every new Claude session, logging to `logs/session-sync.log`
+(UTF-16). It never passes `-Force`, so drift is reported in the log rather than overwritten.
+The hook is hand-installed; `sync.ps1` still never edits hooks.
+
+**Codex removed 2026-11-01:** The user cancelled their Codex subscription and asked for it to be
+removed. `~/.codex` was deleted (junctions unlinked first; sources untouched). sync, doctor, and
+projects-doctor lost `-Target` and the Codex trust check; `codex-home/`, `.codex-plugin/`, and the
+project `.codex/config.toml` template were deleted. `loop.ps1` was ported to `claude -p` with
+`--session-id`/`--resume`, `--json-schema`, and loop `permission_mode`/`allowed_tools` replacing
+`sandbox`. It starts the CLI through `System.Diagnostics.Process` because PowerShell 5.1 splits
+JSON arguments at their spaces, and it pipes the prompt on stdin because a multi-line argument does
+not survive a `claude.cmd` shim. The Junction/plugin reasoning above is history for the Codex side.
+
 **Renamed 2026-09-28:** The user chose `agent-homebase` for the local directory,
 GitHub repository, and shared setup. The same junction and memory design continues
 at `E:\Workspace\agent-homebase`.

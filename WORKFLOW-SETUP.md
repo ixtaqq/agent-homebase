@@ -1,14 +1,13 @@
 # Frontend, writing, and measured improvement
 
-Implemented 4 October 2026 in the existing shared homebase. Both agents use the same 18 new
+Implemented 4 October 2026 in the existing shared homebase. Claude Code uses the 18 new
 local adapters. Seven additional upstream repositories are pinned in vendor-lock.json;
 none of their files are edited. Existing vendor activation remains unchanged.
 
 ## Use the skills
 
-In a fresh Codex chat use `$write-in-my-voice`, `$frontend-direction`, or another skill name.
 In a fresh Claude Code session use `/write-in-my-voice`, `/frontend-direction`, or another
-skill name. Natural-language requests can also select the focused descriptions. The shared
+skill name. Natural-language requests can also select the focused descriptions. The
 sync creates the personal skill directories; a structural check is not a model-quality test.
 
 | Task | Skill route |
@@ -66,9 +65,9 @@ paths under E:/Workspace/agent-homebase, consistent with the existing repository
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-vendor.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-check-tools.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync.ps1 -Target all -DryRun
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync.ps1 -Target all
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/doctor.ps1 -Target all
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync.ps1 -DryRun
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/doctor.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/lint-prose.ps1 -Path 'C:\path\draft.md'
 npm run test:workflow
 npm run eval:workflow

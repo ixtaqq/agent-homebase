@@ -5,7 +5,7 @@ Default to the user's established preferences: state the main point early; use f
 Supported example:
 - Source facts: two agents share one instruction folder; no speed benchmark was run.
 - Weak draft: Unlock a seamless workflow that supercharges productivity.
-- Grounded edit: Keep your Codex and Claude instructions in one folder.
+- Grounded edit: Keep your Claude instructions and skills in one folder.
 
 Preservation example:
 - Original: We measured 180 ms on the test device; production latency may differ.

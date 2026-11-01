@@ -1,6 +1,6 @@
 ---
 name: <folder-name>
-description: <What it does, then WHEN to use it — the phrasings and situations that should trigger it. This is the only text Codex reads before deciding, so name the trigger words out loud.>
+description: <What it does, then WHEN to use it — the phrasings and situations that should trigger it. This is the only text Claude reads before deciding, so name the trigger words out loud.>
 metadata:
   short-description: <under 40 chars, shown in skill lists>
 ---

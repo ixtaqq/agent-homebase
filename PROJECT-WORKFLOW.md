@@ -5,7 +5,7 @@ Project instructions and the user's current request determine the task scope.
 
 ## Use the shared setup
 
-- Skills are installed globally for Codex and Claude Code. Use the skills exposed
+- Skills are installed globally for Claude Code. Use the skills exposed
   by the current session; do not copy them into projects or assume a slash command exists.
 - Read project and directory-specific instructions before changing files.
 - Clarify only when missing information materially changes the implementation.
@@ -22,7 +22,7 @@ Project instructions and the user's current request determine the task scope.
 ## Keep it working
 
 The source of truth is `E:\workspace\agent-homebase`.
-Update shared skills there. Existing junctions expose edits to both tools;
+Update shared skills there. Existing junctions expose edits immediately;
 open a fresh session to refresh skill discovery and project instructions.
 When adding skills or changing global instructions, follow that repository's
 AGENTS.md sync and doctor requirements.
@@ -31,4 +31,4 @@ For a new project, use `project-bootstrap` to inspect its stack and add verified
 project instructions plus a CLAUDE.md import. Global skills are already available;
 project-specific commands still need to be discovered and verified.
 Then run `scripts/projects-doctor.ps1` from this repository; it lists anything still
-missing, such as the Codex trust entry or the Projects README row.
+missing, such as the CLAUDE.md import or the Projects README row.

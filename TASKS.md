@@ -13,7 +13,8 @@
 - [x] Add Claude guidance, project import template, read-only roles, and prefixed commands.
 - [x] Restore two retired vendor skills as pinned local copies with licenses and provenance.
 - [x] Verify both installed profiles and seven isolated sync integration checks.
-- [ ] Evaluate canonical `.agents/skills` compatibility on the installed Codex version.
+- [x] Remove Codex: Claude-only sync, doctor, and validation; `loop.ps1` ported to `claude -p`.
+- [ ] Run one live `loop.ps1` pass after installing the Claude Code CLI on PATH.
 - [x] Enable writing-for-agents and verify both installed profiles.
 - [x] Add pinned PowerShell analysis and secret scanning with negative regression cases.
 - [ ] Confirm the new Windows CI workflow passes on GitHub (workflow prepared locally).
