@@ -7,30 +7,68 @@ function Get-OsRoot {
     return (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 }
 
-function Get-CodexHome {
-    if ($env:CODEX_HOME) { return $env:CODEX_HOME }
-    return (Join-Path $env:USERPROFILE '.codex')
-}
-
 function Get-ClaudeHome {
     if ($env:CLAUDE_CONFIG_DIR) { return $env:CLAUDE_CONFIG_DIR }
     return (Join-Path $env:USERPROFILE '.claude')
 }
 
-function Get-CodexExe {
-    if ($env:CODEX_EXE) { return $env:CODEX_EXE }
+function Get-ClaudeExe {
+    if ($env:CLAUDE_EXE) { return $env:CLAUDE_EXE }
 
-    $cmd = Get-Command codex -ErrorAction SilentlyContinue
+    # An npm install also puts claude.ps1 on PATH; only an application can be started as a process.
+    $cmd = Get-Command claude -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($cmd) { return $cmd.Source }
 
-    $binRoot = Join-Path $env:LOCALAPPDATA 'OpenAI\Codex\bin'
-    if (Test-Path $binRoot) {
-        $found = Get-ChildItem -Path $binRoot -Filter 'codex.exe' -Recurse -ErrorAction SilentlyContinue |
-                 Sort-Object LastWriteTime -Descending |
-                 Select-Object -First 1
-        if ($found) { return $found.FullName }
-    }
-    throw "codex.exe not found. Add it to PATH or set CODEX_EXE."
+    # Default location of the native installer.
+    $native = Join-Path $env:USERPROFILE '.local\bin\claude.exe'
+    if (Test-Path -LiteralPath $native) { return $native }
+    throw "claude CLI not found. Install Claude Code CLI, add it to PATH, or set CLAUDE_EXE."
+}
+
+# One argument quoted for a raw Windows command line, by the MSVCRT rules. Windows PowerShell 5.1
+# quotes arguments that contain double quotes inconsistently, so JSON is passed through
+# Invoke-NativeCapture with a command line built from these instead of through `&`.
+function ConvertTo-NativeArgument {
+    param([Parameter(Mandatory)][AllowEmptyString()][string]$Value)
+    if ($Value -and $Value -notmatch '[\s"]') { return $Value }
+    $escaped = ($Value -replace '(\\*)"', '$1$1\"') -replace '(\\+)$', '$1$1'
+    return ('"' + $escaped + '"')
+}
+
+# Runs a native command with a verbatim command line, UTF-8 stdin, and stdout/stderr captured to
+# files. Returns the exit code.
+function Invoke-NativeCapture {
+    param(
+        [Parameter(Mandatory)][string]$FilePath,
+        [Parameter(Mandatory)][string]$ArgumentLine,
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [string]$InputText = '',
+        [Parameter(Mandatory)][string]$OutFile,
+        [Parameter(Mandatory)][string]$ErrFile
+    )
+    $utf8 = New-Object System.Text.UTF8Encoding $false
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $FilePath
+    $psi.Arguments = $ArgumentLine
+    $psi.WorkingDirectory = $WorkingDirectory
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.StandardOutputEncoding = $utf8
+    $psi.StandardErrorEncoding = $utf8
+
+    $process = [System.Diagnostics.Process]::Start($psi)
+    $stderr = $process.StandardError.ReadToEndAsync()
+    $bytes = $utf8.GetBytes($InputText)
+    $process.StandardInput.BaseStream.Write($bytes, 0, $bytes.Length)
+    $process.StandardInput.Close()
+    $stdout = $process.StandardOutput.ReadToEnd()
+    $process.WaitForExit()
+
+    [System.IO.File]::WriteAllText($OutFile, $stdout, $utf8)
+    [System.IO.File]::WriteAllText($ErrFile, $stderr.Result, $utf8)
+    return $process.ExitCode
 }
 
 # True when the path exists and is a reparse point (junction or symlink).

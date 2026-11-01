@@ -17,52 +17,62 @@ function run(script, args = [], expected = 0) {
   assert.equal(result.status, expected, `${script} ${args.join(' ')}\n${result.stdout}\n${result.stderr}`);
   return result.stdout;
 }
-function check(name, fn) { fn(); console.log(`PASS ${name}`); passed++; }
-const mock = path.join(fixture, 'mock-codex.ps1');
+function check(name, fn) { if (fn() === 'skip') return; console.log(`PASS ${name}`); passed++; }
+// The runner starts claude through a .cmd shim here, the same way an npm install is launched.
+const mock = path.join(fixture, 'mock-claude.js');
+const shim = path.join(fixture, 'claude.cmd');
 const calls = path.join(fixture, 'calls.jsonl');
 fs.writeFileSync(mock, `
-ConvertTo-Json -InputObject @($args) -Compress | Add-Content -LiteralPath $env:TEST_CALLS
-$output = $args[[array]::IndexOf($args, '-o') + 1]
-$status = 'continue'
-if ($args -contains 'resume' -or $env:TEST_FAIL -eq '1') { $status = 'done' }
-@{status=$status;summary='fixture';next_action='next'} | ConvertTo-Json | Set-Content -LiteralPath $output
-Write-Output '{"type":"thread.started","thread_id":"00000000-0000-0000-0000-000000000001"}'
-if ($env:TEST_FAIL -eq '1') { exit 7 }
-exit 0
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+const stdin = fs.readFileSync(0, 'utf8');
+fs.appendFileSync(process.env.TEST_CALLS, JSON.stringify({ args, stdin }) + '\\n');
+JSON.parse(args[args.indexOf('--json-schema') + 1]);
+const status = args.includes('--resume') || process.env.TEST_FAIL === '1' ? 'done' : 'continue';
+console.log(JSON.stringify({ type: 'result', is_error: false, result: 'fixture',
+  structured_output: { status, summary: 'fixture \\u2014 ok', next_action: 'next' } }));
+process.exit(process.env.TEST_FAIL === '1' ? 7 : 0);
 `);
-env.CODEX_HOME = path.join(fixture, 'codex-home');
-fs.mkdirSync(env.CODEX_HOME);
-env.CODEX_EXE = mock;
+fs.writeFileSync(shim, `@node "%~dp0mock-claude.js" %*\r\n`);
+env.CLAUDE_EXE = shim;
 env.TEST_CALLS = calls;
 const loop = path.join(fixture, 'test.loop.md');
-fs.writeFileSync(loop, `---\nname: reliability-${path.basename(fixture)}\ncwd: ${fixture}\nsandbox: read-only\nmax_iterations: 2\nexit_when: fixture completes\n---\nExercise the runner.\n`);
+fs.writeFileSync(loop, `---\nname: reliability-${path.basename(fixture)}\ncwd: ${fixture}\npermission_mode: dontAsk\nallowed_tools: Bash(git status *)\nmax_iterations: 2\nexit_when: fixture completes\n---\nExercise the runner — "quoted" text.\n`);
 try {
   check('runner executes two passes and resumes its own session', () => {
     run('loop.ps1', ['-Loop', loop]);
     const recorded = fs.readFileSync(calls, 'utf8').trim().split(/\r?\n/).map(JSON.parse);
     assert.equal(recorded.length, 2);
-    assert.equal(recorded[1][recorded[1].indexOf('resume') + 1], '00000000-0000-0000-0000-000000000001');
-    assert.ok(recorded[1].indexOf('-C') < recorded[1].indexOf('resume'));
-    assert.ok(recorded[1].indexOf('-s') < recorded[1].indexOf('resume'));
+    const [first, second] = recorded.map(call => call.args);
+    const session = first[first.indexOf('--session-id') + 1];
+    assert.match(session, /^[0-9a-f-]{36}$/);
+    assert.equal(second[second.indexOf('--resume') + 1], session);
+    assert.equal(first[first.indexOf('--permission-mode') + 1], 'dontAsk');
+    assert.equal(first[first.indexOf('--allowedTools') + 1], 'Bash(git status *)');
+    assert.ok(recorded[0].stdin.includes('Exercise the runner — "quoted" text.'));
   });
   check('installed CLI accepts both generated commands without model execution', () => {
     const recorded = fs.readFileSync(calls, 'utf8').trim().split(/\r?\n/).map(JSON.parse);
     const find = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-      `. '${root.replace(/'/g, "''")}\\scripts\\_common.ps1'; $env:CODEX_EXE = ''; Get-CodexExe`], { env, encoding: 'utf8' });
-    assert.equal(find.status, 0, find.stderr);
-    const helpScript = path.join(fixture, 'cli-help.ps1');
-    fs.writeFileSync(helpScript, 'param($Binary, $ArgumentsFile)\n$cliArguments = Get-Content -LiteralPath $ArgumentsFile -Raw | ConvertFrom-Json\n& $Binary @cliArguments\nexit $LASTEXITCODE\n');
-    for (const [index, args] of recorded.entries()) {
-      const argsFile = path.join(fixture, `help-${index}.json`);
-      fs.writeFileSync(argsFile, JSON.stringify([...args.slice(0, -1), '--help']));
-      const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-        helpScript, find.stdout.trim(), argsFile], { env, encoding: 'utf8' });
+      `. '${root.replace(/'/g, "''")}\\scripts\\_common.ps1'; $env:CLAUDE_EXE = ''; Get-ClaudeExe`], { env, encoding: 'utf8' });
+    // Prefer the CLI pinned in package.json; npm's PATH entry is a .cmd shim that spawnSync cannot quote.
+    const pinned = path.join(root, 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe');
+    const binary = fs.existsSync(pinned) ? pinned : find.stdout.trim();
+    if (!/\.exe$/i.test(binary)) {
+      console.log(`SKIP no claude.exe found (${binary || 'not installed'}); generated commands were not checked against it`);
+      return 'skip';
+    }
+    // --help rejects bad values but not unknown flag names, so check the names against its text.
+    const help = spawnSync(binary, ['--help'], { env, encoding: 'utf8' }).stdout;
+    for (const { args } of recorded) {
+      const result = spawnSync(binary, [...args, '--help'], { env, encoding: 'utf8' });
       assert.equal(result.status, 0, result.stdout + result.stderr);
+      for (const flag of args.filter(arg => arg.startsWith('--'))) assert.ok(help.includes(flag), `unknown flag ${flag}`);
     }
   });
-  check('nonzero CLI exit cannot report completion even with a done status file', () => {
+  check('nonzero CLI exit cannot report completion even with a done status', () => {
     env.TEST_FAIL = '1';
-    assert.match(run('loop.ps1', ['-Loop', loop], 3), /codex exited 7; treating as blocked/);
+    assert.match(run('loop.ps1', ['-Loop', loop], 3), /claude exited 7; treating as blocked/);
     delete env.TEST_FAIL;
   });
   check('scheduling and removal can be previewed without Task Scheduler writes', () => {

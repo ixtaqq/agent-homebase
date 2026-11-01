@@ -1,6 +1,6 @@
 ---
 name: project-bootstrap
-description: Set up a repository for Codex or Claude Code with verified project instructions and settings where needed. Use when the user asks to bootstrap, onboard, or set up a repository for coding agents.
+description: Set up a repository for Claude Code with verified project instructions. Use when the user asks to bootstrap, onboard, or set up a repository for coding agents.
 metadata:
   short-description: Wire a repo into the personal Agent Homebase
 ---
@@ -27,31 +27,15 @@ deliverable — a copied template with placeholders left in is worse than no fil
    Delete every section you could not fill with something specific. Aim for under 50 lines.
    If `AGENTS.md` already exists, extend it — never overwrite — and add the pointer if missing.
 
-3. **For Claude Code or a shared setup, add `<repo>/CLAUDE.md`** containing `@AGENTS.md`
-   from `templates/project/CLAUDE.md`. If it already exists, preserve its instructions and add
-   the import only if missing. This keeps the project conventions shared across both tools.
+3. **Add `<repo>/CLAUDE.md`** containing `@AGENTS.md` from `templates/project/CLAUDE.md`. If it
+   already exists, preserve its instructions and add the import only if missing. Claude Code
+   manages workspace trust in its own interface.
 
-4. **For Codex, add `<repo>/.codex/config.toml`** from the template only if the repo needs settings that differ
-   from the global defaults (sandbox, model, reasoning effort, MCP servers). Skip it otherwise.
-
-5. **For Codex, mark the project trusted** only with the user's approval. Append to `~/.codex/config.toml`:
-
-   ```toml
-   [projects.'<lower-case absolute path>']
-   trust_level = "trusted"
-   ```
-
-   The key must be the lower-cased absolute path. Show the user the exact block and confirm before
-   writing — this file is theirs.
-
-   Claude Code manages workspace trust in its own interface; do not change Codex settings for
-   a Claude-only setup.
-
-6. **For a repo under `E:\workspace\Projects`**, add its row to that folder's `README.md`, then run
+4. **For a repo under `E:\workspace\Projects`**, add its row to that folder's `README.md`, then run
    `powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\projects-doctor.ps1`
-   (add `-Target claude` for a Claude-only setup) and resolve what it reports for this project.
+   and resolve what it reports for this project.
 
-7. **Report** which files were created, which commands you verified, and anything you could not
+5. **Report** which files were created, which commands you verified, and anything you could not
    determine and left out.
 
 ## Do not

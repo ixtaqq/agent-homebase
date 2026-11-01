@@ -3,13 +3,12 @@
 Health check for the agent-homebase wiring. Read-only.
 
 .DESCRIPTION
-Reports: skill link state, orphaned junctions left in ~/.codex/skills, drift between
-global/AGENTS.md and ~/.codex/AGENTS.md, loop definitions whose cwd is missing, and whether
-codex.exe can be resolved.
+Reports: skill link state, orphaned junctions left in ~/.claude/skills, drift between
+global/CLAUDE.md and ~/.claude/CLAUDE.md, copied roles and commands, loop definitions whose cwd is
+missing, and whether the claude CLI can be resolved.
 
 Deliberately standalone -- it does NOT dot-source _common.ps1, and it avoids .NET type literals and
-method calls. Codex runs commands in a sandbox where PowerShell is in ConstrainedLanguage mode,
-which forbids both; this script has to stay runnable from inside a loop.
+method calls, so it stays runnable from a locked-down PowerShell session.
 
 Exit code 0 = clean, 1 = something needs attention.
 
@@ -17,27 +16,12 @@ Exit code 0 = clean, 1 = something needs attention.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\doctor.ps1
 #>
 [CmdletBinding()]
-param([ValidateSet('codex', 'claude', 'all')][string]$Target = 'codex')
-
-if ($Target -eq 'all') {
-    $exitCode = 0
-    foreach ($agentTarget in @('codex', 'claude')) {
-        Write-Host "Checking $agentTarget"
-        & powershell -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Target $agentTarget
-        if ($LASTEXITCODE -ne 0) { $exitCode = 1 }
-    }
-    exit $exitCode
-}
+param()
 
 $root       = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$agentHome  = $env:CODEX_HOME
-if (-not $agentHome) { $agentHome = Join-Path $env:USERPROFILE '.codex' }
-$guidanceName = 'AGENTS.md'
-if ($Target -eq 'claude') {
-    $agentHome = $env:CLAUDE_CONFIG_DIR
-    if (-not $agentHome) { $agentHome = Join-Path $env:USERPROFILE '.claude' }
-    $guidanceName = 'CLAUDE.md'
-}
+$agentHome  = $env:CLAUDE_CONFIG_DIR
+if (-not $agentHome) { $agentHome = Join-Path $env:USERPROFILE '.claude' }
+$guidanceName = 'CLAUDE.md'
 $skillsSrc  = Join-Path $root 'skills'
 $skillsDest = Join-Path $agentHome 'skills'
 $findings   = New-Object System.Collections.ArrayList
@@ -92,27 +76,11 @@ function Read-FrontMatterFile {
     return @{ Meta = $meta; Body = $body }
 }
 
-# --- selected agent binary ---------------------------------------------------------------------
+# --- claude CLI --------------------------------------------------------------------------------
 
-if ($Target -eq 'claude') {
-    $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
-    if ($claudeCmd) { Add-Finding 'claude' 'claude' 'OK' $claudeCmd.Source }
-    else { Add-Finding 'claude' 'claude' 'WARN' 'CLI not on PATH (the desktop app does not need it)' }
-} else {
-    $codexCmd = Get-Command codex -ErrorAction SilentlyContinue
-    if ($codexCmd) {
-        Add-Finding 'codex' 'codex.exe' 'OK' $codexCmd.Source
-    } else {
-        $binRoot = Join-Path $env:LOCALAPPDATA 'OpenAI\Codex\bin'
-        $found = $null
-        if (Test-Path $binRoot) {
-            $found = Get-ChildItem -Path $binRoot -Filter 'codex.exe' -Recurse -ErrorAction SilentlyContinue |
-                     Sort-Object LastWriteTime -Descending | Select-Object -First 1
-        }
-        if ($found) { Add-Finding 'codex' 'codex.exe' 'OK' $found.FullName }
-        else        { Add-Finding 'codex' 'codex.exe' 'FAIL' 'not on PATH and not found under LOCALAPPDATA' }
-    }
-}
+$claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
+if ($claudeCmd) { Add-Finding 'claude' 'claude' 'OK' $claudeCmd.Source }
+else { Add-Finding 'claude' 'claude' 'WARN' 'CLI not on PATH (the desktop app does not need it; loop.ps1 does)' }
 
 # --- skills ------------------------------------------------------------------------------------
 
@@ -179,9 +147,9 @@ if (Test-Path -LiteralPath $enabledFile) {
     Add-Finding 'vendor' 'enabled.txt' 'OK' ("{0} skills enabled" -f $enabledCount)
 }
 
-# orphans: links in ~/.codex/skills pointing into this repo but no longer backed by a source
+# orphans: links in ~/.claude/skills pointing into this repo but no longer backed by a source
 foreach ($dest in (Get-ChildItem -Path $skillsDest -Directory -Force -ErrorAction SilentlyContinue)) {
-    if ($dest.Name -eq '.system' -or $expected.ContainsKey($dest.Name)) { continue }
+    if ($expected.ContainsKey($dest.Name)) { continue }
     $info = Get-LinkInfo $dest.FullName
     if ($null -eq $info -or -not $info.IsLink -or -not $info.Target) { continue }
     if ($info.Target.ToLower().StartsWith($vendorRoot.ToLower())) {
@@ -191,44 +159,40 @@ foreach ($dest in (Get-ChildItem -Path $skillsDest -Directory -Force -ErrorActio
     }
 }
 
-# --- global AGENTS.md --------------------------------------------------------------------------
+# --- global CLAUDE.md --------------------------------------------------------------------------
 
 $srcHash  = Get-HashOrNull (Join-Path (Join-Path $root 'global') $guidanceName)
 $destHash = Get-HashOrNull (Join-Path $agentHome $guidanceName)
 
 if ($null -eq $srcHash)         { Add-Finding 'global' $guidanceName 'FAIL'    'source is missing from global/' }
-elseif ($null -eq $destHash)    { Add-Finding 'global' $guidanceName 'MISSING' "run sync.ps1 -Target $Target" }
+elseif ($null -eq $destHash)    { Add-Finding 'global' $guidanceName 'MISSING' 'run sync.ps1' }
 elseif ($srcHash -eq $destHash) { Add-Finding 'global' $guidanceName 'OK'      'in sync' }
 else                          { Add-Finding 'global' $guidanceName 'DRIFT'   'installed copy differs from source' }
 
 # Copied role and command files must stay in sync too.
-$agentSource = Join-Path $root 'codex-home\agents'
-$agentFilter = '*.toml'
-if ($Target -eq 'claude') {
-    $agentSource = Join-Path $root 'claude-home\agents'
-    $agentFilter = '*.md'
-    $globalGuide = Join-Path $root 'global\CLAUDE.md'
-    foreach ($line in (Get-Content -LiteralPath $globalGuide -Encoding UTF8 -ErrorAction SilentlyContinue)) {
-        if ($line -like '@*') {
-            $importPath = $line.Substring(1).Trim()
-            if (Test-Path -LiteralPath $importPath -PathType Leaf) {
-                Add-Finding 'global' 'shared import' 'OK' $importPath
-            } else { Add-Finding 'global' 'shared import' 'FAIL' "missing: $importPath" }
-        }
+$agentSource = Join-Path $root 'claude-home\agents'
+$agentFilter = '*.md'
+$globalGuide = Join-Path $root 'global\CLAUDE.md'
+foreach ($line in (Get-Content -LiteralPath $globalGuide -Encoding UTF8 -ErrorAction SilentlyContinue)) {
+    if ($line -like '@*') {
+        $importPath = $line.Substring(1).Trim()
+        if (Test-Path -LiteralPath $importPath -PathType Leaf) {
+            Add-Finding 'global' 'shared import' 'OK' $importPath
+        } else { Add-Finding 'global' 'shared import' 'FAIL' "missing: $importPath" }
     }
-    foreach ($command in (Get-ChildItem -LiteralPath (Join-Path $root 'commands') -Filter '*.md' -File)) {
-        if ($command.Name -eq 'README.md') { continue }
-        $dest = Join-Path (Join-Path $agentHome 'commands') ('os-' + $command.Name)
-        if ((Get-HashOrNull $dest) -eq (Get-HashOrNull $command.FullName)) {
-            Add-Finding 'commands' ('os-' + $command.Name) 'OK' 'in sync'
-        } else { Add-Finding 'commands' ('os-' + $command.Name) 'DRIFT' "run sync.ps1 -Target $Target" }
-    }
+}
+foreach ($command in (Get-ChildItem -LiteralPath (Join-Path $root 'commands') -Filter '*.md' -File)) {
+    if ($command.Name -eq 'README.md') { continue }
+    $dest = Join-Path (Join-Path $agentHome 'commands') ('os-' + $command.Name)
+    if ((Get-HashOrNull $dest) -eq (Get-HashOrNull $command.FullName)) {
+        Add-Finding 'commands' ('os-' + $command.Name) 'OK' 'in sync'
+    } else { Add-Finding 'commands' ('os-' + $command.Name) 'DRIFT' 'run sync.ps1' }
 }
 foreach ($agent in (Get-ChildItem -LiteralPath $agentSource -Filter $agentFilter -File)) {
     $dest = Join-Path (Join-Path $agentHome 'agents') $agent.Name
     if ((Get-HashOrNull $dest) -eq (Get-HashOrNull $agent.FullName)) {
         Add-Finding 'agents' $agent.Name 'OK' 'in sync'
-    } else { Add-Finding 'agents' $agent.Name 'DRIFT' "run sync.ps1 -Target $Target" }
+    } else { Add-Finding 'agents' $agent.Name 'DRIFT' 'run sync.ps1' }
 }
 
 # --- loops -------------------------------------------------------------------------------------

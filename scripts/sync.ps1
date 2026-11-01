@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Wires agent-homebase into Codex and/or Claude Code with shared skill junctions.
+Wires agent-homebase into Claude Code with shared skill junctions.
 
 .DESCRIPTION
 Idempotent. Junctions are live, so editing a SKILL.md here takes effect in the next thread with no
-re-sync. Re-run only after adding a skill folder or editing global/AGENTS.md.
+re-sync. Re-run after adding a skill folder or editing global/CLAUDE.md, roles, or commands.
 
 Never deletes a real directory. A real directory sitting where a junction should go is reported and
 skipped -- resolve it by hand.
@@ -17,37 +17,19 @@ powershell -NoProfile -File scripts\sync.ps1
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('codex', 'claude', 'all')][string]$Target = 'codex',
     # Preview actions without changing anything.
     [switch]$DryRun,
     # Re-point junctions whose target has drifted, unlink stale vendor junctions, or overwrite a
-    # modified ~/.codex/AGENTS.md after backing it up.
+    # modified ~/.claude/CLAUDE.md, role, or command after backing it up.
     [switch]$Force
 )
 
 . "$PSScriptRoot\_common.ps1"
 $ErrorActionPreference = 'Stop'
 
-if ($Target -eq 'all') {
-    $exitCode = 0
-    foreach ($agentTarget in @('codex', 'claude')) {
-        Write-Host "Syncing $agentTarget"
-        $childArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath, '-Target', $agentTarget)
-        if ($DryRun) { $childArgs += '-DryRun' }
-        if ($Force) { $childArgs += '-Force' }
-        & powershell @childArgs
-        if ($LASTEXITCODE -ne 0) { $exitCode = 1 }
-    }
-    exit $exitCode
-}
-
 $root       = Get-OsRoot
-$agentHome  = Get-CodexHome
-$guidanceName = 'AGENTS.md'
-if ($Target -eq 'claude') {
-    $agentHome = Get-ClaudeHome
-    $guidanceName = 'CLAUDE.md'
-}
+$agentHome  = Get-ClaudeHome
+$guidanceName = 'CLAUDE.md'
 $skillsSrc  = Join-Path $root 'skills'
 $skillsDest = Join-Path $agentHome 'skills'
 $results    = New-Object System.Collections.ArrayList
@@ -58,7 +40,6 @@ function Add-Result {
 }
 
 if (-not (Test-Path -LiteralPath $agentHome)) {
-    if ($Target -eq 'codex') { throw "CODEX_HOME not found at '$agentHome'. Is Codex installed for this user?" }
     if ($DryRun) { Add-Result 'config/' 'would create' $agentHome }
     else { New-Item -ItemType Directory -Path $agentHome | Out-Null }
 }
@@ -137,7 +118,7 @@ if (Test-Path -LiteralPath $enabledFile) {
         }
 
         # The frontmatter name wins over the folder name: several upstream folders disagree with
-        # their own SKILL.md, and Codex keys the skill on the declared name.
+        # their own SKILL.md, and Claude keys the skill on the declared name.
         $linkName = Get-MetaValue (Read-FrontMatterFile $skillMd).Meta 'name' (Split-Path $srcDir -Leaf)
 
         if ($vendorWanted.ContainsKey($linkName) -or (Test-Path -LiteralPath (Join-Path $skillsSrc $linkName))) {
@@ -182,15 +163,11 @@ foreach ($linkName in ($vendorWanted.Keys | Sort-Object)) {
     }
 }
 
-# --- provider-specific agent roles: copied -----------------------------------------------------
+# --- agent roles: copied -----------------------------------------------------------------------
 
-$agentsSrcRoot  = Join-Path $root 'codex-home\agents'
+$agentsSrcRoot  = Join-Path $root 'claude-home\agents'
 $agentsDestRoot = Join-Path $agentHome 'agents'
-$agentFilter = '*.toml'
-if ($Target -eq 'claude') {
-    $agentsSrcRoot = Join-Path $root 'claude-home\agents'
-    $agentFilter = '*.md'
-}
+$agentFilter = '*.md'
 
 if (Test-Path -LiteralPath $agentsSrcRoot -PathType Container) {
     if (-not (Test-Path -LiteralPath $agentsDestRoot -PathType Container)) {
@@ -229,33 +206,31 @@ if (Test-Path -LiteralPath $agentsSrcRoot -PathType Container) {
     }
 }
 
-# Claude commands use a prefix to avoid replacing built-in commands such as /debug.
-if ($Target -eq 'claude') {
-    $commandsDest = Join-Path $agentHome 'commands'
-    foreach ($command in (Get-ChildItem -LiteralPath (Join-Path $root 'commands') -Filter '*.md' -File)) {
-        if ($command.Name -eq 'README.md') { continue }
-        $dest = Join-Path $commandsDest ('os-' + $command.Name)
-        $itemName = 'commands/os-' + $command.Name
-        $destHash = Get-FileHashOrNull $dest
-        if ($destHash -eq (Get-FileHashOrNull $command.FullName)) {
-            Add-Result $itemName 'ok' 'command current'
-        } elseif ($destHash -and -not $Force) {
-            Add-Result $itemName 'DRIFT' 'installed command differs -- use -Force to back up and overwrite'
-        } elseif ($DryRun) {
-            Add-Result $itemName 'would copy' 'command (changed files are backed up with -Force)'
-        } else {
-            New-Item -ItemType Directory -Path $commandsDest -Force | Out-Null
-            if ($destHash) { Copy-Item -LiteralPath $dest -Destination (Get-BackupPath $dest) }
-            Copy-Item -LiteralPath $command.FullName -Destination $dest -Force
-            Add-Result $itemName 'copied' 'command'
-        }
+# Commands use a prefix to avoid replacing built-in commands such as /debug.
+$commandsDest = Join-Path $agentHome 'commands'
+foreach ($command in (Get-ChildItem -LiteralPath (Join-Path $root 'commands') -Filter '*.md' -File)) {
+    if ($command.Name -eq 'README.md') { continue }
+    $dest = Join-Path $commandsDest ('os-' + $command.Name)
+    $itemName = 'commands/os-' + $command.Name
+    $destHash = Get-FileHashOrNull $dest
+    if ($destHash -eq (Get-FileHashOrNull $command.FullName)) {
+        Add-Result $itemName 'ok' 'command current'
+    } elseif ($destHash -and -not $Force) {
+        Add-Result $itemName 'DRIFT' 'installed command differs -- use -Force to back up and overwrite'
+    } elseif ($DryRun) {
+        Add-Result $itemName 'would copy' 'command (changed files are backed up with -Force)'
+    } else {
+        New-Item -ItemType Directory -Path $commandsDest -Force | Out-Null
+        if ($destHash) { Copy-Item -LiteralPath $dest -Destination (Get-BackupPath $dest) }
+        Copy-Item -LiteralPath $command.FullName -Destination $dest -Force
+        Add-Result $itemName 'copied' 'command'
     }
 }
 
 # Links into vendor/ that enabled.txt no longer lists. Removing a junction never touches the files
 # it points at, but it is still a removal, so it needs -Force.
 foreach ($dest in (Get-ChildItem -Path $skillsDest -Directory -Force -ErrorAction SilentlyContinue)) {
-    if ($dest.Name -eq '.system' -or $vendorWanted.ContainsKey($dest.Name)) { continue }
+    if ($vendorWanted.ContainsKey($dest.Name)) { continue }
     if (-not (Test-IsLink $dest.FullName)) { continue }
     $linkTarget = Get-LinkTarget $dest.FullName
     if (-not $linkTarget) { continue }
@@ -292,7 +267,7 @@ if (Test-Path $agentsSrc) {
     } elseif ($srcHash -eq $destHash) {
         Add-Result $guidanceName 'ok' 'in sync'
     } else {
-        # Destination differs. It may hold edits made directly in ~/.codex that are not in the repo.
+        # Destination differs. It may hold edits made directly in ~/.claude that are not in the repo.
         $backup = Get-BackupPath $agentsDest
         if (-not $Force) {
             Add-Result $guidanceName 'DRIFT' 'differs from repo -- re-run with -Force to back up and overwrite'
@@ -316,5 +291,5 @@ if ($problems.Count -gt 0) {
     exit 1
 }
 if ($DryRun) { Write-Host "`nDry run -- nothing was changed." -ForegroundColor Yellow }
-else { Write-Host "`nSync complete for $Target. Open a new session to pick up changes." -ForegroundColor Green }
+else { Write-Host "`nSync complete. Open a new session to pick up changes." -ForegroundColor Green }
 exit 0

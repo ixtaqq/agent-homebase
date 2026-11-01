@@ -1,7 +1,8 @@
 # agent-homebase
 
-A personal operating system for Codex and Claude Code, as a folder. Skills, standards, templates,
-and memory live here; both tools point back at them so projects share one maintained setup.
+A personal operating system for Claude Code, as a folder. Skills, standards, templates, and memory
+live here; Claude points back at them so every project shares one maintained setup. Codex support
+was removed on 1 November 2026.
 
 The [frontend and writing workflow](WORKFLOW-SETUP.md) adds 18 local adapters, a pinned offline
 prose linter, and a 20-case experiment recorder. Upstream sources stay untouched; the adapters
@@ -9,16 +10,18 @@ replace provider-specific tools and automatic external actions with this setup's
 
 ## How it is wired
 
-`scripts/sync.ps1 -Target all` creates Windows **directory junctions** at
-`~/.codex/skills/<name>` and `~/.claude/skills/<name>` for local and enabled vendor skills.
-Edit a source `SKILL.md` here and new sessions in both tools see it, with no reinstall.
-Codex's global `AGENTS.md` is copied. Claude's global `CLAUDE.md` is a small adapter that imports
-the shared `global/AGENTS.md`. Agent roles and Claude commands are copied; re-run sync after editing them.
+`scripts/sync.ps1` creates Windows **directory junctions** at `~/.claude/skills/<name>` for local
+and enabled vendor skills. Edit a source `SKILL.md` here and new sessions see it, with no reinstall.
+Claude's global `CLAUDE.md` is a small adapter that imports `global/AGENTS.md`, so edits to the
+personal defaults are live too. The adapter itself, agent roles, and commands are copied.
 
-Use `-Target codex`, `-Target claude`, or `-Target all` for sync and doctor. The default is
-`codex` for compatibility with existing loops. `CODEX_HOME` and `CLAUDE_CONFIG_DIR` override
-the corresponding configuration directories. Sync never changes credentials, model settings,
-workspace trust, hooks, or plugin registrations.
+`CLAUDE_CONFIG_DIR` overrides the configuration directory. Sync never changes credentials, model
+settings, workspace trust, hooks, or plugin registrations.
+
+A hand-installed `SessionStart` hook in `~/.claude/settings.json` runs `sync.ps1` at the start of
+every new Claude session, in any project, so copied files and new skill folders arrive without a
+manual sync. Its output goes to `logs/session-sync.log`. It never passes `-Force`; drift is logged,
+not overwritten.
 
 ## Setup and checks
 
@@ -37,17 +40,17 @@ upstream security audit. `-Destination` supports restoring into a separate direc
 Wire everything up (idempotent, safe to re-run):
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1 -Target all
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1
 ```
 
 Check the wiring:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\doctor.ps1 -Target all
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\doctor.ps1
 ```
 
 Check that every project in `E:\workspace\Projects` is wired up (instructions, `@AGENTS.md`
-import, Codex trust, README row). Use `-Target claude` to skip the Codex trust check:
+import, README row):
 
 ```bash
 powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\projects-doctor.ps1
@@ -66,15 +69,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\
 ```
 
 `sync.ps1` takes `-DryRun` and `-Force`. `loop.ps1` takes `-DryRun`, `-MaxIterations`, and
-`-IntervalSeconds`. Each loop run records its Codex session ID and resumes that exact session on
-later passes, so concurrent Codex work cannot be picked up by accident.
+`-IntervalSeconds`. The runner launches `claude -p` once per pass, so it needs the Claude Code CLI
+(`CLAUDE_EXE`, `claude` on PATH, or `~/.local/bin/claude.exe`). It assigns pass one a session ID and
+resumes that exact session on later passes, so other Claude work cannot be picked up by accident.
 
 Optional story-ledger mode uses one fresh context per story and requires an independent verification
 command before persisting completion. See `loops/_schema.md` and `templates/story-ledger.json`.
 
 ## Using Claude Code
 
-Claude Code discovers the same skill sources through `~/.claude/skills`. Use `/memory-keeper`,
+Claude Code discovers the skill sources through `~/.claude/skills`. Use `/memory-keeper`,
 `/retrieve-knowledge`, `/project-bootstrap`, or `/ship-check`, or describe the task naturally.
 The shared prompt commands are `/os-review`, `/os-debug`, and `/os-ship-it`. Three read-only roles
 are installed as `os-explorer`, `os-reviewer`, and `os-docs-researcher`.
@@ -83,14 +87,12 @@ Start a new Claude Code session after syncing. If `claude auth status` reports `
 run `claude auth login` yourself. A structural doctor check does not verify authentication or a
 live model response. In Claude, `/memory` shows loaded instruction files; type `/` to browse commands.
 
-Use `AGENTS.md` for shared project conventions and import it from a project `CLAUDE.md` with
-`@AGENTS.md`; the bootstrap skill and template support this. Both tools use this repository's
-`memory/` and `knowledge/`. Keep that as the canonical store for facts intended to be shared.
+Use `AGENTS.md` for project conventions and import it from a project `CLAUDE.md` with
+`@AGENTS.md`; the bootstrap skill and template support this. Sessions use this repository's
+`memory/` and `knowledge/`. Keep that as the canonical store for facts intended to persist.
 
-The in-session loop workflow works in either tool. The separate PowerShell headless loop runner
-continues to launch **Codex CLI**, including when invoked from Claude; no Claude execution backend
-or scheduled job is installed. Vendor workflows that mention a provider-specific tool still need
-that tool or an equivalent supported by the current agent.
+The separate PowerShell headless loop runner launches `claude -p`; no scheduled job is installed.
+Vendor workflows that mention a provider-specific tool still need that tool or a Claude equivalent.
 
 This setup selects six ECC skills rather than installing ECC's entire runtime. Adding a full ECC
 plugin later requires resolving overlapping skills and choosing a canonical memory workflow.
@@ -103,25 +105,23 @@ References: [Claude skills](https://code.claude.com/docs/en/skills),
 | --- | --- |
 | `global/AGENTS.md` | Personal defaults loaded into every session, everywhere |
 | `global/CLAUDE.md` | Claude adapter importing the shared personal defaults |
-| `skills/` | Reusable workflows Codex triggers on its own — one folder each, junctioned into `~/.codex/skills` |
+| `skills/` | Reusable workflows Claude triggers on its own — one folder each, junctioned into `~/.claude/skills` |
 | `commands/` | Prompt bodies you invoke by hand (`review`, `debug`, `ship-it`) |
 | `loops/` | Loop definitions (`*.loop.md`) for headless, repeating work |
 | `scripts/` | `sync`, `doctor`, `projects-doctor`, `loop`, `story-ledger`, `schedule-loop`, plus the loop status schema |
 | `SPEC.md`, `ROADMAP.md`, `TASKS.md` | Requirements, phase boundaries, and validated work |
-| `codex-home/agents/` | Read-only Codex role layers copied into `~/.codex/agents/` |
 | `claude-home/agents/` | Read-only Claude roles copied into `~/.claude/agents/` |
-| `templates/` | Starters: project `AGENTS.md`, project `.codex/config.toml`, new skill |
+| `templates/` | Starters: project `AGENTS.md` and `CLAUDE.md`, story ledger, new skill |
 | `vendor/` | Third-party skill repos, cloned as-is. `enabled.txt` picks which ones go live |
 | `memory/` | Durable decisions — one fact per file, `INDEX.md` on top |
 | `logs/` | Loop run output. Generated, gitignored |
-| `.codex-plugin/` | Packaging manifest. Dormant — see below |
 
 ## Skills that ship with it
 
 | Skill | Fires when |
 | --- | --- |
 | `loop-runner` | Work needs repeated passes — "keep going until", polling, grinding tests green |
-| `project-bootstrap` | A repo needs an `AGENTS.md` and Codex settings |
+| `project-bootstrap` | A repo needs an `AGENTS.md` and a `CLAUDE.md` import |
 | `memory-keeper` | Something is worth remembering across sessions |
 | `ship-check` | Before calling a change done, committing, or deploying |
 | `retrieve-knowledge` | Retrieve or organize substantial shared notes |
@@ -131,7 +131,7 @@ References: [Claude skills](https://code.claude.com/docs/en/skills),
 ## Vendored skills
 
 `vendor/` holds upstream skill repos; `vendor/enabled.txt` decides which are junctioned into
-both tools' personal skill folders. **48 vendor skills plus 25 local skills are available** — mattpocock's `engineering/` + `productivity/`,
+Claude's personal skill folder. **48 vendor skills plus 25 local skills are available** — mattpocock's `engineering/` + `productivity/`,
 karpathy's guidelines, selected planning/documentation workflows from David Ondrej, selected
 engineering workflows from Addy Osmani, all of taste-skill, and six curated ECC skills for
 verification, loops, GitHub operations, security, repository scanning, and skill audits. ECC's
@@ -145,12 +145,12 @@ entries are commented out. Upstream pulls cannot silently remove these local cop
 Enable or disable by editing `enabled.txt`, then:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1 -Target all -Force
+powershell -NoProfile -ExecutionPolicy Bypass -File E:\Workspace\agent-homebase\scripts\sync.ps1 -Force
 ```
 
 `-Force` is required to unlink a disabled skill; without it sync reports it as `STALE` and leaves it.
-It is also required before sync overwrites a changed `~/.codex/AGENTS.md`; sync saves its previous
-contents as `~/.codex/AGENTS.md.<unique-id>.bak`. Roles and commands use unique backups too, so
+It is also required before sync overwrites a changed `~/.claude/CLAUDE.md`; sync saves its previous
+contents as `~/.claude/CLAUDE.md.<unique-id>.bak`. Roles and commands use unique backups too, so
 repeated forced syncs preserve earlier versions. Unlinking removes the junction only — the vendored files are never touched. Details and update
 commands: [vendor/README.md](vendor/README.md).
 
@@ -162,15 +162,15 @@ Never edit anything under `vendor/`. To customize an upstream skill, copy it int
 ## Adding things
 
 **A skill** — copy `templates/skill/SKILL.md` into `skills/<name>/SKILL.md`, set frontmatter `name`
-to the folder name, write the `description` as *when to use this* (it is the only text Codex reads
-before deciding), then run `sync.ps1`.
+to the folder name, write the `description` as *when to use this* (it is the only text Claude reads
+before deciding). The next session's sync hook links it; run `sync.ps1` to link it now.
 
 **A loop** — copy a file in `loops/`, set `cwd` and a checkable `exit_when`, run
 `loop.ps1 -Loop <name> -DryRun` first. Format: `loops/_schema.md`.
 
 **A command** — drop a markdown prompt in `commands/`.
 
-**A memory** — ask Codex to remember it; the `memory-keeper` skill handles the file and the index.
+**A memory** — ask Claude to remember it; the `memory-keeper` skill handles the file and the index.
 
 ## Scheduling
 
@@ -182,20 +182,13 @@ Tasks land under `\AgentHomebase\` in Task Scheduler. `-List` shows them, `-Remo
 Use `-DryRun` to preview registration or removal. Replacing an existing task requires `-Force`.
 Registering may need an elevated shell.
 
-## The plugin manifest
-
-`.codex-plugin/plugin.json` is valid and passes the bundled validator, so this folder can be
-published as a Codex plugin later without restructuring. It is deliberately **not** registered in
-any marketplace — junctions plus an installed plugin would load every skill twice. Register it only
-if you drop the junctions first.
-
 ## Requirements
 
-Windows PowerShell 5.1 (no `pwsh` needed), Git, Codex CLI installed. Junctions work across volumes
+Windows PowerShell 5.1 (no `pwsh` needed), Git, and Claude Code. Junctions work across volumes
 without admin rights; only `schedule-loop.ps1` may require elevation.
 
-Claude support additionally needs Claude Code on `PATH`; it can be configured before sign-in.
-Node.js is needed for the integration tests, which use isolated folders and retain fixtures
+The desktop app is enough for sessions; headless loops also need the Claude Code CLI. Node.js is
+needed for the integration tests, which use isolated folders and retain fixtures
 for inspection:
 
 ```powershell
@@ -204,7 +197,7 @@ node scripts/tests/reliability.test.js
 ```
 
 The reliability checks use a mock model process, validate the generated commands against the
-installed CLI's help parser, preview scheduling, and restore a vendor fixture from a local source.
+pinned Claude Code CLI's help parser, preview scheduling, and restore a vendor fixture from a local source.
 They make no model calls or scheduled-task changes. Pester fixtures are also retained for inspection.
 Validation checks tracked and non-ignored files for runtime artifacts, PowerShell ASCII encoding
 and syntax, and pinned vendor drift.

@@ -8,8 +8,7 @@ folders, such as finance\ or personal\). Hidden entries and names starting with 
 junctions are followed and de-duplicated by target. For each project it reports:
 
   - AGENTS.md exists and points at PROJECT-WORKFLOW.md,
-  - CLAUDE.md imports @AGENTS.md (claude),
-  - a Codex trust entry exists in config.toml (codex),
+  - CLAUDE.md imports @AGENTS.md,
   - the workspace README.md links to it,
   - whether it is a Git repository (WARN only).
 
@@ -24,17 +23,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\projects-doctor.ps1
 #>
 [CmdletBinding()]
 param(
-    [string]$ProjectsRoot = 'E:\workspace\Projects',
-    [ValidateSet('codex', 'claude', 'all')][string]$Target = 'all'
+    [string]$ProjectsRoot = 'E:\workspace\Projects'
 )
 
 $root      = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $workflow  = Join-Path $root 'PROJECT-WORKFLOW.md'
-$codexHome = $env:CODEX_HOME
-if (-not $codexHome) { $codexHome = Join-Path $env:USERPROFILE '.codex' }
-$checkCodex  = ($Target -eq 'codex' -or $Target -eq 'all')
-$checkClaude = ($Target -eq 'claude' -or $Target -eq 'all')
-$findings    = New-Object System.Collections.ArrayList
+$findings  = New-Object System.Collections.ArrayList
 
 function Add-Finding {
     param([string]$Project, [string]$Check, [string]$Status, [string]$Detail)
@@ -93,22 +87,6 @@ foreach ($entry in (Get-ChildItem -LiteralPath $ProjectsRoot -Directory -Force |
 
 # --- shared inputs -----------------------------------------------------------------------------
 
-$trusted = @{}
-$codexConfig = Join-Path $codexHome 'config.toml'
-if ($checkCodex -and (Test-Path -LiteralPath $codexConfig -PathType Leaf)) {
-    $section = $null
-    foreach ($line in (Get-Content -LiteralPath $codexConfig -Encoding UTF8)) {
-        if ($line -match '^\s*\[projects\.(?:''([^'']+)''|"([^"]+)")\]\s*$') {
-            $section = $matches[1]
-            if (-not $section) { $section = $matches[2] -replace '\\\\', '\' }
-        } elseif ($line -match '^\s*\[') {
-            $section = $null
-        } elseif ($section -and $line -match '^\s*trust_level\s*=\s*"trusted"') {
-            $trusted[$section.TrimEnd('\').ToLower()] = $true
-        }
-    }
-}
-
 $readmePath = Join-Path $ProjectsRoot 'README.md'
 $readme = ''
 if (Test-Path -LiteralPath $readmePath -PathType Leaf) { $readme = Get-Content -LiteralPath $readmePath -Raw -Encoding UTF8 }
@@ -118,13 +96,11 @@ if (Test-Path -LiteralPath $readmePath -PathType Leaf) { $readme = Get-Content -
 if (Test-Path -LiteralPath $workflow -PathType Leaf) { Add-Finding '(workspace)' 'PROJECT-WORKFLOW.md' 'OK' $workflow }
 else { Add-Finding '(workspace)' 'PROJECT-WORKFLOW.md' 'FAIL' "missing: $workflow" }
 
-if ($checkClaude) {
-    $workspaceClaude = Join-Path $ProjectsRoot 'CLAUDE.md'
-    $imports = @(Get-Content -LiteralPath $workspaceClaude -Encoding UTF8 -ErrorAction SilentlyContinue |
-                 Where-Object { $_ -match '^@.*PROJECT-WORKFLOW\.md\s*$' })
-    if ($imports.Count -gt 0) { Add-Finding '(workspace)' 'CLAUDE.md import' 'OK' $imports[0].Trim() }
-    else { Add-Finding '(workspace)' 'CLAUDE.md import' 'MISSING' 'add @<path>\PROJECT-WORKFLOW.md' }
-}
+$workspaceClaude = Join-Path $ProjectsRoot 'CLAUDE.md'
+$imports = @(Get-Content -LiteralPath $workspaceClaude -Encoding UTF8 -ErrorAction SilentlyContinue |
+             Where-Object { $_ -match '^@.*PROJECT-WORKFLOW\.md\s*$' })
+if ($imports.Count -gt 0) { Add-Finding '(workspace)' 'CLAUDE.md import' 'OK' $imports[0].Trim() }
+else { Add-Finding '(workspace)' 'CLAUDE.md import' 'MISSING' 'add @<path>\PROJECT-WORKFLOW.md' }
 
 if (-not $readme) { Add-Finding '(workspace)' 'README.md' 'MISSING' "no index at $readmePath" }
 
@@ -141,23 +117,13 @@ foreach ($project in $projects) {
         Add-Finding $name 'AGENTS.md' 'MISSING' 'no PROJECT-WORKFLOW.md pointer'
     }
 
-    if ($checkClaude) {
-        $claude = Join-Path $project.Path 'CLAUDE.md'
-        if (-not (Test-Path -LiteralPath $claude -PathType Leaf)) {
-            Add-Finding $name 'CLAUDE.md' 'MISSING' 'add a file containing @AGENTS.md'
-        } elseif (Select-String -LiteralPath $claude -Pattern '^@AGENTS\.md\s*$' -Quiet) {
-            Add-Finding $name 'CLAUDE.md' 'OK' 'imports @AGENTS.md'
-        } else {
-            Add-Finding $name 'CLAUDE.md' 'MISSING' 'no @AGENTS.md import'
-        }
-    }
-
-    if ($checkCodex) {
-        if ($trusted.ContainsKey($project.Path.TrimEnd('\').ToLower()) -or $trusted.ContainsKey($project.Real.ToLower())) {
-            Add-Finding $name 'Codex trust' 'OK' 'trusted'
-        } else {
-            Add-Finding $name 'Codex trust' 'MISSING' ("no [projects.'{0}'] entry" -f $project.Real.ToLower())
-        }
+    $claude = Join-Path $project.Path 'CLAUDE.md'
+    if (-not (Test-Path -LiteralPath $claude -PathType Leaf)) {
+        Add-Finding $name 'CLAUDE.md' 'MISSING' 'add a file containing @AGENTS.md'
+    } elseif (Select-String -LiteralPath $claude -Pattern '^@AGENTS\.md\s*$' -Quiet) {
+        Add-Finding $name 'CLAUDE.md' 'OK' 'imports @AGENTS.md'
+    } else {
+        Add-Finding $name 'CLAUDE.md' 'MISSING' 'no @AGENTS.md import'
     }
 
     if ($readme) {

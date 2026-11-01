@@ -1,9 +1,13 @@
 ---
 name: constrained-language-in-loops
-description: PowerShell scripts invoked from inside a Codex sandbox must use the call operator and avoid .NET type literals
+description: RETIRED 2026-11-01 with Codex -- why scripts called from a Codex sandbox avoided -File and .NET type literals
 type: constraint
 created: 2026-07-27
 ---
+
+**Retired 2026-11-01:** Codex was removed from this setup and `loop.ps1` now launches `claude -p`,
+whose Bash tool is not in ConstrainedLanguage mode. The rule below no longer binds new scripts; it is
+kept as history and in case Codex returns.
 
 Codex executes sandboxed shell commands through a nested `powershell -Command "..."` whose outer
 shell is in **ConstrainedLanguage** mode. Two consequences for any `.ps1` a loop or agent calls:

@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-Runs a agent-homebase loop definition headlessly against `codex exec`, pass by pass, until it reports
+Runs a agent-homebase loop definition headlessly against `claude -p`, pass by pass, until it reports
 done, reports blocked, or hits its iteration budget.
 
 .DESCRIPTION
-Reads loops/<name>.loop.md (see loops/_schema.md). Pass 1 starts a session; later passes resume the
-specific session ID emitted by that first pass so context carries. Every pass returns JSON matching
+Reads loops/<name>.loop.md (see loops/_schema.md). Pass 1 starts a session under an ID the runner
+chooses; later passes resume that exact session so context carries. Every pass returns JSON matching
 schemas/loop-status.schema.json; the runner stops on status = done or blocked.
 
 Output goes to logs/<loop>/<timestamp>/: iter-N.json per pass, plus run.log.
@@ -54,9 +54,9 @@ $prompt = $parsed.Body
 
 $loopName = Get-MetaValue $meta 'name' ([IO.Path]::GetFileNameWithoutExtension($loopFile) -replace '\.loop$', '')
 $cwd      = Get-MetaValue $meta 'cwd' $root
-$sandbox  = Get-MetaValue $meta 'sandbox' 'workspace-write'
+$permissionMode = Get-MetaValue $meta 'permission_mode' 'acceptEdits'
+$allowedTools = Get-MetaValue $meta 'allowed_tools' $null
 $model    = Get-MetaValue $meta 'model' $null
-$profileName = Get-MetaValue $meta 'profile' $null
 $exitWhen = Get-MetaValue $meta 'exit_when' '(not stated)'
 $storyLedger = Get-MetaValue $meta 'story_ledger' $null
 $verificationCommand = Get-MetaValue $meta 'verification_command' $null
@@ -71,8 +71,8 @@ if ($IntervalSeconds -ge 0) { $interval = $IntervalSeconds }
 
 if (-not $prompt) { Write-Error "Loop '$loopName' has an empty prompt body."; exit 1 }
 if (-not (Test-Path -LiteralPath $cwd)) { Write-Error "Loop '$loopName' cwd does not exist: $cwd"; exit 1 }
-if ($sandbox -notin @('read-only', 'workspace-write', 'danger-full-access')) {
-    Write-Error "Loop '$loopName' has invalid sandbox '$sandbox'."; exit 1
+if ($permissionMode -notin @('plan', 'dontAsk', 'acceptEdits', 'auto', 'default')) {
+    Write-Error "Loop '$loopName' has invalid permission_mode '$permissionMode'. The runner never bypasses permissions."; exit 1
 }
 
 if ($storyLedger) {
@@ -86,8 +86,9 @@ if ($storyLedger) {
     $freshContext = $true
 }
 
-$codex = Get-CodexExe
+$claude = Get-ClaudeExe
 $ledgerScript = Join-Path $root 'scripts\story-ledger.ps1'
+$schemaArg = ConvertTo-NativeArgument ((Get-Content -LiteralPath $schema -Raw -Encoding UTF8) | ConvertFrom-Json | ConvertTo-Json -Depth 10 -Compress)
 
 # --- run directory -----------------------------------------------------------------------------
 
@@ -117,7 +118,8 @@ Loop control (mandatory):
 - Otherwise status=continue, and put the single next increment in next_action.
 "@
 
-Write-Log "loop=$loopName cwd=$cwd sandbox=$sandbox max=$maxIter interval=${interval}s"
+Write-Log "loop=$loopName cwd=$cwd permission_mode=$permissionMode max=$maxIter interval=${interval}s"
+if ($allowedTools) { Write-Log "allowed_tools: $allowedTools" }
 Write-Log "exit_when: $exitWhen"
 if ($storyLedger) { Write-Log "story_ledger: $storyLedger"; Write-Log "verification_command: $verificationCommand" }
 
@@ -141,15 +143,18 @@ for ($i = 1; $i -le $maxIter; $i++) {
 
     $iterFile = Join-Path $runDir ('iter-{0}.json' -f $i)
 
+    # The runner picks the session ID up front, so resuming never depends on parsing output.
+    if ($i -eq 1 -or $freshContext) { $threadId = [guid]::NewGuid().ToString() }
+
     $cmdArgs = New-Object System.Collections.ArrayList
-    [void]$cmdArgs.Add('exec')
-    [void]$cmdArgs.AddRange(@('-C', $cwd, '-s', $sandbox))
-    if ($profileName) { [void]$cmdArgs.AddRange(@('-p', $profileName)) }
-    if ($i -gt 1 -and -not $freshContext) { [void]$cmdArgs.AddRange(@('resume', $threadId)) }
-    [void]$cmdArgs.Add('--skip-git-repo-check')
-    [void]$cmdArgs.AddRange(@('--output-schema', $schema, '-o', $iterFile))
-    if ($i -eq 1 -or $freshContext) { [void]$cmdArgs.Add('--json') }
-    if ($model)   { [void]$cmdArgs.AddRange(@('-m', $model)) }
+    [void]$cmdArgs.Add('-p')
+    if ($i -gt 1 -and -not $freshContext) { [void]$cmdArgs.AddRange(@('--resume', $threadId)) }
+    else { [void]$cmdArgs.AddRange(@('--session-id', $threadId)) }
+    [void]$cmdArgs.AddRange(@('--permission-mode', $permissionMode))
+    # --allowedTools takes several values, so it must be followed by another flag, not the prompt.
+    if ($allowedTools) { [void]$cmdArgs.AddRange(@('--allowedTools', (ConvertTo-NativeArgument $allowedTools))) }
+    [void]$cmdArgs.AddRange(@('--output-format', 'json', '--json-schema', $schemaArg))
+    if ($model)   { [void]$cmdArgs.AddRange(@('--model', $model)) }
 
     if ($storyLedger) {
         $storyContract = @"
@@ -172,12 +177,11 @@ Deterministic verification gate owned by the runner:
     } else {
         $passPrompt = "Continue the loop. Pass $i of $maxIter." + $contract
     }
-    [void]$cmdArgs.Add($passPrompt)
 
+    $argLine = $cmdArgs -join ' '
     if ($DryRun) {
         Write-Host "`n--- pass $i ---" -ForegroundColor Yellow
-        Write-Host ('"{0}" {1} "<prompt>"' -f $codex, (($cmdArgs | Select-Object -SkipLast 1) -join ' '))
-        if ($i -eq 1 -and -not $freshContext) { $threadId = '<session-id from pass 1>' }
+        Write-Host ('cd "{0}"; <prompt> | "{1}" {2}' -f $cwd, $claude, $argLine)
         continue
     }
 
@@ -185,54 +189,36 @@ Deterministic verification gate owned by the runner:
     $outFile = Join-Path $runDir ("pass-$i.out")
     $errFile = Join-Path $runDir ("pass-$i.err")
 
-    # Never merge a native command's stderr into the pipeline (2>&1): PS 5.1 wraps each line in an
-    # ErrorRecord, which $ErrorActionPreference='Stop' turns into a terminating error even on exit 0.
-    $prevEap = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    & $codex @cmdArgs 1> $outFile 2> $errFile
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $prevEap
+    # The prompt goes in on stdin: a multi-line argument does not survive a claude.cmd shim.
+    $code = Invoke-NativeCapture -FilePath $claude -ArgumentLine $argLine -WorkingDirectory $cwd `
+        -InputText $passPrompt -OutFile $outFile -ErrFile $errFile
 
     if ($code -ne 0) {
-        Write-Log "pass $i -- codex exited $code; treating as blocked."
+        Write-Log "pass $i -- claude exited $code; treating as blocked."
         $finalStatus = 'blocked'
         break
     }
 
     if ($i -eq 1 -and -not $freshContext) {
-        foreach ($line in (Get-Content -LiteralPath $outFile -Encoding UTF8 -ErrorAction SilentlyContinue)) {
-            try {
-                $sessionEvent = $line | ConvertFrom-Json
-                if ($sessionEvent.type -eq 'thread.started' -and $sessionEvent.thread_id) {
-                    $threadId = $sessionEvent.thread_id
-                    break
-                }
-            } catch {}
-        }
-        if (-not $threadId) {
-            Write-Log 'pass 1 -- no session ID in Codex JSON output; cannot safely resume.'
-            $finalStatus = 'blocked'
-            break
-        }
         Set-Content -LiteralPath $sessionFile -Value $threadId -Encoding UTF8
         Write-Log "pass 1 -- session=$threadId"
     }
 
     $status = 'continue'; $summary = ''; $next = ''
-    if (Test-Path -LiteralPath $iterFile) {
-        $raw = (Get-Content -LiteralPath $iterFile -Raw -Encoding UTF8).Trim()
-        try {
-            $obj = $raw | ConvertFrom-Json
-            $status  = $obj.status
-            $summary = $obj.summary
-            $next    = $obj.next_action
-        } catch {
-            Write-Log "pass $i -- could not parse status JSON; treating as blocked. Raw: $raw"
-            $status = 'blocked'; $summary = 'unparseable model output'
-        }
+    $raw = (Get-Content -LiteralPath $outFile -Raw -Encoding UTF8 -ErrorAction SilentlyContinue)
+    $obj = $null
+    if ($raw) { try { $obj = $raw.Trim() | ConvertFrom-Json } catch { $obj = $null } }
+    if ($null -eq $obj) {
+        Write-Log "pass $i -- could not parse claude JSON output; treating as blocked."
+        $status = 'blocked'; $summary = 'unparseable claude output'
+    } elseif ($obj.is_error -or -not $obj.PSObject.Properties['structured_output'] -or $null -eq $obj.structured_output) {
+        Write-Log "pass $i -- no structured status in output; treating as blocked. Result: $($obj.result)"
+        $status = 'blocked'; $summary = 'claude returned no structured status'
     } else {
-        Write-Log "pass $i -- no status file written; treating as blocked."
-        $status = 'blocked'; $summary = "codex produced no output (exit $code)"
+        $obj.structured_output | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $iterFile -Encoding UTF8
+        $status  = $obj.structured_output.status
+        $summary = $obj.structured_output.summary
+        $next    = $obj.structured_output.next_action
     }
 
     Write-Log "pass $i -- status=$status :: $summary"
